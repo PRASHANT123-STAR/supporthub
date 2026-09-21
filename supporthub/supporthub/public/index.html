@@ -861,8 +861,12 @@
     }
 
     /* ---------------------------------- ADMIN PANEL & PERMISSIONS MATRIX ---------------------------------- */
-    function Admin({ employees, permissions, onAddEmployee, onDeleteEmployee, onUpdatePermissions, onResetPassword }) {
+    function Admin({ employees, permissions, onAddEmployee, onBulkImport, onDeleteEmployee, onUpdatePermissions, onResetPassword }) {
       const [showForm, setShowForm] = useState(false);
+      const [showImport, setShowImport] = useState(false);
+      const [importFile, setImportFile] = useState(null);
+      const [importing, setImporting] = useState(false);
+      const [importResult, setImportResult] = useState(null);
       const [form, setForm] = useState({ name: "", role: "Support Engineer", dept: "IT Support", email: "", phone: "", password: "password123" });
       const [localPerms, setLocalPerms] = useState({});
       const [resetModal, setResetModal] = useState({ open: false, emp: null, newPassword: "" });
@@ -894,6 +898,21 @@
         const newMap = { ...localPerms, [role]: updated };
         setLocalPerms(newMap);
         onUpdatePermissions(role, updated);
+      };
+
+      const handleBulkImport = async () => {
+        if (!importFile) return;
+        setImporting(true);
+        setImportResult(null);
+        try {
+          const result = await onBulkImport(importFile);
+          setImportResult(result);
+          setImportFile(null);
+        } catch (e) {
+          setImportResult({ success: false, message: e.message || "Bulk import failed" });
+        } finally {
+          setImporting(false);
+        }
       };
 
       const handleSubmit = (e) => {
@@ -969,13 +988,60 @@
           {/* Manage Employees Section */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink }}>Manage Employees (SQL Database)</div>
-            <button className="btn-action" onClick={() => setShowForm(!showForm)} style={{
-              display: "flex", alignItems: "center", gap: 6, background: COLORS.navy, color: "#fff",
-              border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
-            }}>
-              <Icons.Plus size={16} /> Add new employee (Auto-generate ID)
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="btn-action" onClick={() => { setShowImport(true); setImportResult(null); }} style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.accent, color: "#fff",
+                border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+              }}>
+                Bulk Import CSV / Excel
+              </button>
+              <a href="/api/employees/import-template" style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.paper, color: COLORS.ink,
+                border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, textDecoration: "none"
+              }}>
+                Download Template
+              </a>
+              <button className="btn-action" onClick={() => setShowForm(!showForm)} style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.navy, color: "#fff",
+                border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+              }}>
+                <Icons.Plus size={16} /> Add new employee
+              </button>
+            </div>
           </div>
+
+          {showImport && (
+            <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: COLORS.ink, fontSize: 15 }}>Bulk Employee Import</div>
+                  <div style={{ color: COLORS.sub, fontSize: 12.5, marginTop: 4 }}>Upload CSV or Excel (.xlsx). Employee ID is optional; missing IDs are generated automatically.</div>
+                </div>
+                <button onClick={() => { setShowImport(false); setImportFile(null); setImportResult(null); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: COLORS.sub }}><Icons.X size={18} /></button>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <input type="file" accept=".csv,.xlsx" onChange={e => { setImportFile(e.target.files?.[0] || null); setImportResult(null); }} style={{ fontSize: 13 }} />
+                <button onClick={handleBulkImport} disabled={!importFile || importing} style={{ background: importing ? "#94A3B8" : COLORS.accent, color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13.5, fontWeight: 600, cursor: importFile && !importing ? "pointer" : "not-allowed" }}>
+                  {importing ? "Importing..." : "Import Employees"}
+                </button>
+              </div>
+              <div style={{ marginTop: 12, fontSize: 12, color: COLORS.sub }}>
+                Columns: <b>employee_id</b> (optional), <b>name</b>, <b>email</b>, <b>phone</b> (optional), <b>department</b>, <b>role</b>, <b>password</b> (optional).
+              </div>
+              {importResult && (
+                <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: importResult.success ? COLORS.greenSoft : COLORS.redSoft, color: importResult.success ? COLORS.green : COLORS.red, fontSize: 12.5 }}>
+                  <div style={{ fontWeight: 700 }}>{importResult.message}</div>
+                  {importResult.success && <div style={{ marginTop: 5 }}>Imported: {importResult.imported} · Skipped: {importResult.skipped}</div>}
+                  {importResult.errors?.length > 0 && (
+                    <div style={{ marginTop: 8, color: COLORS.ink }}>
+                      {importResult.errors.slice(0, 8).map(err => <div key={err.row}>Row {err.row}: {err.errors.join(", ")}</div>)}
+                      {importResult.errors.length > 8 && <div>…and {importResult.errors.length - 8} more row(s).</div>}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {showForm && (
             <form onSubmit={handleSubmit} style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20, marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1377,6 +1443,18 @@
         }
       };
 
+      const handleBulkImportEmployees = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/employees/bulk-import", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Bulk import failed");
+        setEmployees(prev => [...prev, ...(data.employees || [])]);
+        showToast(data.message || "Employees imported successfully");
+        await loadData();
+        return data;
+      };
+
       const handleDeleteEmployee = async (id) => {
         try {
           const res = await fetch(`/api/employees/${id}`, { method: "DELETE" });
@@ -1604,7 +1682,7 @@
                   {tab === "dashboard" && <Dashboard tickets={tickets} stats={stats} activityLogs={activityLogs} />}
                   {tab === "tracker" && <IssueTracker tickets={tickets} onAddTicket={handleAddTicket} onCycleStatus={handleCycleTicketStatus} onDeleteTicket={handleDeleteTicket} searchQuery={searchQuery} currentUser={currentUser} />}
                   {tab === "employee" && <Employee employees={employees} activityLogs={activityLogs} onToggleStatus={handleToggleEmployeeStatus} searchQuery={searchQuery} currentUser={currentUser} />}
-                  {tab === "admin" && <Admin employees={employees} permissions={permissions} onAddEmployee={handleAddEmployee} onDeleteEmployee={handleDeleteEmployee} onUpdatePermissions={handleUpdatePermissions} onResetPassword={handleResetPassword} />}
+                  {tab === "admin" && <Admin employees={employees} permissions={permissions} onAddEmployee={handleAddEmployee} onBulkImport={handleBulkImportEmployees} onDeleteEmployee={handleDeleteEmployee} onUpdatePermissions={handleUpdatePermissions} onResetPassword={handleResetPassword} />}
                   {tab === "offer" && <OfferLetter offers={offers} onAddOffer={handleAddOffer} onAdvanceOffer={handleAdvanceOffer} onDeleteOffer={handleDeleteOffer} searchQuery={searchQuery} />}
                 </>
               )}
