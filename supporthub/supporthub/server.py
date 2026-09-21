@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -222,6 +222,34 @@ def list_employees():
     return database.get_all_employees()
 
 
+@app.post("/api/employees/bulk-import", summary="Bulk import employees from CSV or XLSX")
+async def bulk_import_employees(file: UploadFile = File(...)):
+    filename = (file.filename or "").lower()
+    if not (filename.endswith(".csv") or filename.endswith(".xlsx")):
+        raise HTTPException(status_code=400, detail="Only CSV and XLSX files are supported.")
+
+    content = await file.read()
+    try:
+        result = database.bulk_create_employees_from_file(content, filename)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Bulk import failed: {exc}")
+
+    return result
+
+
+@app.get("/api/employees/import-template", summary="Download employee import CSV template")
+def employee_import_template():
+    from fastapi.responses import Response
+    csv_text = "employee_id,name,email,phone,department,role,password\nE-106,Rahul Sharma,rahul@example.com,+91 98765 00106,IT Support,Support Engineer,password123\n"
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="employee_import_template.csv"'}
+    )
+
+
 @app.post("/api/employees", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED, summary="Add new employee with auto ID")
 def create_employee(emp: EmployeeCreate):
     try:
@@ -353,3 +381,4 @@ def serve_index():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+
