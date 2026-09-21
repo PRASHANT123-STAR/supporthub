@@ -5,6 +5,8 @@ Manages SQL connections, automatic table migrations, 2FA Mobile Auth, RBAC permi
 
 import sqlite3
 import json
+import csv
+import io
 import re
 import random
 from datetime import datetime, timedelta
@@ -347,6 +349,147 @@ def create_employee(data: Dict[str, Any]) -> Dict[str, Any]:
         )
         conn.commit()
     return get_employee_by_id(emp_id)
+
+
+def bulk_create_employees_from_file(content: bytes, filename: str) -> Dict[str, Any]:
+    """Parse CSV/XLSX employee data, validate rows, and insert valid employees."""
+    rows: List[Dict[str, Any]] = []
+
+    if filename.endswith(".csv"):
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = content.decode("utf-8", errors="replace")
+        reader = csv.DictReader(io.StringIO(text))
+        if not reader.fieldnames:
+            raise ValueError("The CSV file has no header row.")
+        rows = [dict(r) for r in reader]
+    elif filename.endswith(".xlsx"):
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            raise ValueError("Excel support is not installed. Please redeploy with the latest requirements.txt.")
+        try:
+            wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            ws = wb.active
+            values = list(ws.iter_rows(values_only=True))
+            if not values:
+                raise ValueError("The Excel file is empty.")
+            headers = [str(v).strip() if v is not None else "" for v in values[0]]
+            rows = [dict(zip(headers, row)) for row in values[1:] if any(v is not None and str(v).strip() for v in row)]
+        except ValueError:
+            raise
+        except Exception as exc:
+            raise ValueError(f"Could not read the Excel file: {exc}")
+    else:
+        raise ValueError("Only CSV and XLSX files are supported.")
+
+    if not rows:
+        raise ValueError("No employee rows were found. Use the provided template columns.")
+
+    def clean(value):
+        return str(value).strip() if value is not None else ""
+
+    # Accept a few common column spellings.
+    aliases = {
+        "employee_id": ["employee_id", "emp_id", "id", "employee id"],
+        "name": ["name", "full_name", "full name", "employee_name"],
+        "email": ["email", "email_address", "email address"],
+        "phone": ["phone", "mobile", "mobile_number", "mobile number"],
+        "department": ["department", "dept"],
+        "role": ["role", "designation", "job_role", "job role"],
+        "password": ["password", "login_password", "login password"],
+    }
+
+    def normalize_row(raw):
+        normalized = {str(k).strip().lower(): v for k, v in raw.items() if k is not None}
+        out = {}
+        for target, names in aliases.items():
+            for name in names:
+                if name in normalized:
+                    out[target] = clean(normalized[name])
+                    break
+        return out
+
+    normalized_rows = [normalize_row(r) for r in rows]
+    required = ["name", "email", "department", "role"]
+    errors: List[Dict[str, Any]] = []
+    valid: List[Dict[str, Any]] = []
+    seen_ids = set()
+    seen_emails = set()
+
+    email_re = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+    with get_db_connection() as conn:
+        existing = conn.execute("SELECT id, LOWER(email) AS email FROM employees").fetchall()
+        existing_ids = {row["id"].strip().lower() for row in existing}
+        existing_emails = {row["email"].strip().lower() for row in existing if row["email"]}
+
+        for idx, row in enumerate(normalized_rows, start=2):
+            row_errors = []
+            for field in required:
+                if not row.get(field):
+                    row_errors.append(f"Missing {field}")
+            if row.get("email") and not email_re.match(row["email"]):
+                row_errors.append("Invalid email")
+
+            emp_id = row.get("employee_id", "")
+            email_key = row.get("email", "").lower()
+            if emp_id:
+                key = emp_id.lower()
+                if key in existing_ids or key in seen_ids:
+                    row_errors.append(f"Duplicate employee ID: {emp_id}")
+                seen_ids.add(key)
+            if email_key:
+                if email_key in existing_emails or email_key in seen_emails:
+                    row_errors.append(f"Duplicate email: {row.get('email')}")
+                seen_emails.add(email_key)
+
+            if row_errors:
+                errors.append({"row": idx, "employee_id": emp_id or "(auto)", "errors": row_errors})
+                continue
+
+            valid.append({
+                "id": emp_id or None,
+                "name": row["name"],
+                "email": row["email"],
+                "phone": row.get("phone") or None,
+                "dept": row["department"],
+                "role": row["role"],
+                "password": row.get("password") or None,
+                "status": "offline",
+            })
+
+        created = []
+        try:
+            for data in valid:
+                emp_id = data["id"] or get_next_employee_id(conn)
+                phone = data["phone"] or f"+91 98765 {random.randint(10000, 99999)}"
+                pw = data["password"] or ("admin123" if data["role"] == "Admin" else "password123")
+                conn.execute(
+                    """INSERT INTO employees (id, name, role, dept, email, phone, password, status, last_login, last_logout)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (emp_id, data["name"], data["role"], data["dept"], data["email"], phone, pw, "offline", "—", "—")
+                )
+                created.append({
+                    "id": emp_id, "name": data["name"], "role": data["role"], "dept": data["dept"],
+                    "email": data["email"], "phone": phone, "status": "offline",
+                    "lastLogin": "—", "lastLogout": "—", "permissions": get_permissions_for_role(data["role"])
+                })
+            conn.commit()
+        except sqlite3.IntegrityError as exc:
+            conn.rollback()
+            raise ValueError(f"Database rejected the import: {exc}")
+
+    return {
+        "success": True,
+        "total_rows": len(normalized_rows),
+        "imported": len(created),
+        "skipped": len(errors),
+        "employees": created,
+        "errors": errors,
+        "message": f"Imported {len(created)} employee(s); skipped {len(errors)} row(s)."
+    }
 
 
 def update_employee(emp_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
