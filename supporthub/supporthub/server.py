@@ -34,6 +34,9 @@ from models import (
     OfferResponse,
     ActivityLogCreate,
     ActivityLogResponse,
+    PayrollCreate,
+    PayrollUpdate,
+    PayrollResponse,
 )
 
 BASE_DIR = Path(__file__).parent
@@ -311,6 +314,42 @@ def delete_employee(emp_id: str):
     success = database.delete_employee(emp_id)
     if not success:
         raise HTTPException(status_code=404, detail="Employee not found")
+    return None
+
+
+# =============================================================
+# PAYROLL ENDPOINTS
+# =============================================================
+@app.get("/api/payroll", response_model=List[PayrollResponse], summary="List employee payroll records")
+def list_payroll():
+    return database.get_all_payroll()
+
+
+@app.post("/api/payroll", response_model=PayrollResponse, status_code=status.HTTP_201_CREATED, summary="Create monthly payroll")
+def create_payroll(payroll: PayrollCreate):
+    try:
+        return database.create_payroll(payroll.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Failed to create payroll: {exc}")
+
+
+@app.patch("/api/payroll/{payroll_id}", response_model=PayrollResponse, summary="Update payroll or payment status")
+def update_payroll(payroll_id: str, updates: PayrollUpdate):
+    try:
+        updated = database.update_payroll(payroll_id, updates.model_dump(exclude_unset=True))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not updated:
+        raise HTTPException(status_code=404, detail="Payroll record not found")
+    return updated
+
+
+@app.delete("/api/payroll/{payroll_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete payroll record")
+def delete_payroll(payroll_id: str):
+    if not database.delete_payroll(payroll_id):
+        raise HTTPException(status_code=404, detail="Payroll record not found")
     return None
 
 
