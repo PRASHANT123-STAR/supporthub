@@ -54,6 +54,8 @@ def init_db():
 
     with get_db_connection() as conn:
         conn.executescript(schema_sql)
+        # Existing deployments may have been created before payroll was added.
+        # CREATE TABLE IF NOT EXISTS above safely upgrades those databases.
         conn.commit()
 
 
@@ -754,3 +756,117 @@ def get_dashboard_stats() -> Dict[str, Any]:
                 {"name": "Low", "count": low},
             ],
         }
+
+# -------------------------------------------------------------
+# PAYROLL REPOSITORY
+# -------------------------------------------------------------
+def _payroll_row(row) -> Dict[str, Any]:
+    data = dict(row)
+    for key in (
+        "basic_salary", "hra", "other_allowances", "gross_salary",
+        "pf", "esi", "other_deductions", "total_deductions", "net_salary"
+    ):
+        data[key] = round(float(data.get(key) or 0), 2)
+    return data
+
+
+def _calculate_payroll(data: Dict[str, Any]) -> Dict[str, float]:
+    basic = float(data.get("basic_salary") or 0)
+    hra = float(data.get("hra") or 0)
+    allowances = float(data.get("other_allowances") or 0)
+    pf = float(data.get("pf") or 0)
+    esi = float(data.get("esi") or 0)
+    other = float(data.get("other_deductions") or 0)
+    gross = basic + hra + allowances
+    deductions = pf + esi + other
+    return {
+        "basic_salary": round(basic, 2),
+        "hra": round(hra, 2),
+        "other_allowances": round(allowances, 2),
+        "gross_salary": round(gross, 2),
+        "pf": round(pf, 2),
+        "esi": round(esi, 2),
+        "other_deductions": round(other, 2),
+        "total_deductions": round(deductions, 2),
+        "net_salary": round(gross - deductions, 2),
+    }
+
+
+def get_next_payroll_id(conn: sqlite3.Connection) -> str:
+    row = conn.execute("SELECT id FROM payroll ORDER BY id DESC LIMIT 1").fetchone()
+    if not row:
+        return "PAY-1001"
+    m = re.search(r"(\d+)$", row["id"] or "")
+    return f"PAY-{int(m.group(1)) + 1}" if m else "PAY-1001"
+
+
+def get_all_payroll() -> List[Dict[str, Any]]:
+    with get_db_connection() as conn:
+        rows = conn.execute("""
+            SELECT p.*, e.name AS employee_name
+            FROM payroll p
+            LEFT JOIN employees e ON e.id = p.employee_id
+            ORDER BY p.pay_month DESC, p.created_at DESC, p.id DESC
+        """).fetchall()
+        return [_payroll_row(r) for r in rows]
+
+
+def get_payroll_by_id(payroll_id: str) -> Optional[Dict[str, Any]]:
+    with get_db_connection() as conn:
+        row = conn.execute("""
+            SELECT p.*, e.name AS employee_name
+            FROM payroll p
+            LEFT JOIN employees e ON e.id = p.employee_id
+            WHERE p.id = ?
+        """, (payroll_id,)).fetchone()
+        return _payroll_row(row) if row else None
+
+
+def create_payroll(data: Dict[str, Any]) -> Dict[str, Any]:
+    with get_db_connection() as conn:
+        emp = conn.execute("SELECT id, name FROM employees WHERE id = ?", (data["employee_id"],)).fetchone()
+        if not emp:
+            raise ValueError("Employee not found")
+        calc = _calculate_payroll(data)
+        payroll_id = data.get("id") or get_next_payroll_id(conn)
+        try:
+            conn.execute("""
+                INSERT INTO payroll (id, employee_id, pay_month, basic_salary, hra, other_allowances, gross_salary,
+                    pf, esi, other_deductions, total_deductions, net_salary, payment_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (payroll_id, data["employee_id"], data["pay_month"], calc["basic_salary"], calc["hra"],
+                  calc["other_allowances"], calc["gross_salary"], calc["pf"], calc["esi"], calc["other_deductions"],
+                  calc["total_deductions"], calc["net_salary"], data.get("payment_status") or "Pending"))
+            conn.commit()
+        except sqlite3.IntegrityError as exc:
+            if "UNIQUE" in str(exc).upper():
+                raise ValueError("Payroll already exists for this employee and month")
+            raise
+    return get_payroll_by_id(payroll_id)
+
+
+def update_payroll(payroll_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    with get_db_connection() as conn:
+        existing = conn.execute("SELECT * FROM payroll WHERE id = ?", (payroll_id,)).fetchone()
+        if not existing:
+            return None
+        data = dict(existing)
+        data.update({k: v for k, v in updates.items() if v is not None})
+        calc = _calculate_payroll(data)
+        conn.execute("""
+            UPDATE payroll SET basic_salary=?, hra=?, other_allowances=?, gross_salary=?, pf=?, esi=?,
+                other_deductions=?, total_deductions=?, net_salary=?, payment_status=?, updated_at=CURRENT_TIMESTAMP
+            WHERE id=?
+        """, (calc["basic_salary"], calc["hra"], calc["other_allowances"], calc["gross_salary"], calc["pf"],
+              calc["esi"], calc["other_deductions"], calc["total_deductions"], calc["net_salary"],
+              data.get("payment_status") or "Pending", payroll_id))
+        conn.commit()
+    return get_payroll_by_id(payroll_id)
+
+
+def delete_payroll(payroll_id: str) -> bool:
+    with get_db_connection() as conn:
+        cur = conn.execute("DELETE FROM payroll WHERE id = ?", (payroll_id,))
+        conn.commit()
+        return cur.rowcount > 0
+
