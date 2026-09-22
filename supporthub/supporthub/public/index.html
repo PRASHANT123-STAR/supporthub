@@ -1,813 +1,1805 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>DemandFlow - Demand &amp; Task Management</title>
-<meta name="description" content="Demand and task management platform with role-based access."/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d0f17;--bg2:#131624;--bg3:#1a1f35;
-  --card:rgba(255,255,255,0.04);--card-border:rgba(255,255,255,0.08);
-  --primary:#7c5cfc;--primary-light:#9d7dff;--primary-glow:rgba(124,92,252,0.25);
-  --accent:#00d4ff;--accent2:#ff6b9d;
-  --success:#06d6a0;--danger:#ef4444;--warning:#f59e0b;
-  --text:#e8eaf6;--text2:#9ba3c8;--text3:#5c6490;
-  --sidebar-w:260px;--radius:14px;--radius-sm:8px;
-  --shadow:0 8px 32px rgba(0,0,0,0.4)
-}
-html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:99px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SupportHub — Operations & Role-Based Access Control</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 
-/* LOGIN */
-#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 80% 80% at 50% -20%,rgba(124,92,252,.3) 0%,transparent 60%),
-  radial-gradient(ellipse 60% 60% at 80% 80%,rgba(0,212,255,.15) 0%,transparent 60%),var(--bg)}
-.login-box{width:430px;background:rgba(255,255,255,.05);backdrop-filter:blur(20px);
-  border:1px solid var(--card-border);border-radius:24px;padding:48px 40px;
-  box-shadow:var(--shadow),0 0 80px rgba(124,92,252,.1);animation:fadeUp .5s ease}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.logo-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--accent));
-  display:flex;align-items:center;justify-content:center;font-size:22px}
-.login-logo h1{font-size:22px;font-weight:700;letter-spacing:-.5px}
-.login-logo span{color:var(--primary-light)}
-.login-sub{color:var(--text2);font-size:14px;margin-bottom:28px}
-.form-group{margin-bottom:18px}
-.form-group label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.form-group input,.form-group select,.form-group textarea{
-  width:100%;padding:12px 14px;background:rgba(255,255,255,.06);
-  border:1px solid var(--card-border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:'Inter',sans-serif;font-size:14px;
-  transition:border-color .2s,box-shadow .2s;outline:none}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
-  border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
-.form-group select option{background:var(--bg2)}
-.form-group textarea{resize:vertical;min-height:80px}
-.demo-box{background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);
-  border-radius:var(--radius-sm);padding:14px;margin-bottom:20px;font-size:12.5px;
-  color:var(--text2);line-height:1.8}
-.demo-box strong{color:var(--primary-light);display:block;margin-bottom:4px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:11px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;
-  cursor:pointer;border:none;transition:all .2s;font-family:'Inter',sans-serif;white-space:nowrap}
-.btn-primary{background:linear-gradient(135deg,var(--primary),#6244e8);color:#fff;
-  width:100%;padding:13px;box-shadow:0 4px 20px rgba(124,92,252,.4)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,92,252,.5)}
-.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--card-border)}
-.btn-secondary:hover{background:rgba(255,255,255,.1)}
-.btn-sm{padding:7px 16px;font-size:13px}
-.btn-icon{padding:7px 9px;border-radius:var(--radius-sm);background:rgba(255,255,255,.05);
-  border:1px solid var(--card-border);color:var(--text2);cursor:pointer;
-  transition:all .2s;font-size:14px;line-height:1}
-.btn-icon:hover{background:rgba(255,255,255,.1);color:var(--text)}
-.err-msg{color:#f87171;font-size:13px;margin-top:12px;text-align:center;display:none}
+  <!--
+    Frontend dependencies are loaded by the bootloader at the bottom of this file.
+    This avoids the old failure mode where a blocked/failed CDN script left the page
+    permanently stuck on the initial loading screen.
+  -->
 
-/* APP */
-#app{display:none;height:100vh}
-#app.active{display:flex}
-
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);
-  border-right:1px solid var(--card-border);display:flex;flex-direction:column;
-  padding:24px 16px;position:fixed;left:0;top:0;bottom:0;z-index:100}
-.sidebar-logo{display:flex;align-items:center;gap:10px;padding:4px 8px;margin-bottom:32px}
-.sidebar-logo-icon{width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
-  display:flex;align-items:center;justify-content:center;font-size:18px}
-.sidebar-logo h2{font-size:18px;font-weight:700;letter-spacing:-.5px}
-.sidebar-logo span{color:var(--primary-light)}
-.nav-sect{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;
-  color:var(--text3);padding:0 8px;margin:24px 0 8px}
-.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;
-  border-radius:var(--radius-sm);color:var(--text2);font-size:14px;font-weight:500;
-  cursor:pointer;transition:all .2s;margin-bottom:2px;border:1px solid transparent}
-.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
-.nav-item.active{background:rgba(124,92,252,.15);color:var(--primary-light);border-color:rgba(124,92,252,.2)}
-.nav-icon{font-size:18px;width:22px;text-align:center}
-.nav-badge{margin-left:auto;background:var(--primary);color:#fff;font-size:10px;
-  font-weight:700;padding:2px 7px;border-radius:99px}
-.sidebar-footer{margin-top:auto;padding:12px 8px}
-.user-card{display:flex;align-items:center;gap:10px;padding:12px;
-  background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm)}
-.user-avatar{width:36px;height:36px;border-radius:50%;
-  background:linear-gradient(135deg,var(--primary),var(--accent2));
-  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-.user-info{flex:1;min-width:0}
-.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{font-size:11px;color:var(--text3);text-transform:capitalize}
-.logout-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;
-  padding:4px;transition:color .2s}
-.logout-btn:hover{color:var(--danger)}
-
-/* MAIN */
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-.topbar{height:64px;background:rgba(13,15,23,.85);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--card-border);display:flex;align-items:center;
-  padding:0 32px;gap:16px;position:sticky;top:0;z-index:50}
-.topbar-title{font-size:18px;font-weight:700;flex:1}
-.topbar-sub{font-size:12px;color:var(--text3);margin-left:8px}
-.content{flex:1;padding:32px;overflow-y:auto}
-.page{display:none;animation:fadeIn .3s ease}
-.page.active{display:block}
-
-/* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:28px}
-.stat-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);
-  padding:22px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
-.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c,var(--primary))}
-.stat-icon{font-size:28px;margin-bottom:12px}
-.stat-value{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:4px}
-.stat-label{font-size:13px;color:var(--text2)}
-
-/* TABLE */
-.table-wrap{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);overflow:hidden}
-table{width:100%;border-collapse:collapse}
-thead th{padding:14px 18px;text-align:left;font-size:11px;font-weight:600;
-  text-transform:uppercase;letter-spacing:1px;color:var(--text3);
-  background:rgba(255,255,255,.02);border-bottom:1px solid var(--card-border)}
-tbody td{padding:14px 18px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
-tbody tr:last-child td{border-bottom:none}
-tbody tr{transition:background .15s}
-tbody tr:hover{background:rgba(255,255,255,.03)}
-.empty-cell{text-align:center;color:var(--text3);padding:48px;font-size:14px}
-.empty-icon{font-size:40px;display:block;margin-bottom:8px}
-
-/* BADGES */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600}
-.b-pending{background:rgba(245,158,11,.15);color:var(--warning);border:1px solid rgba(245,158,11,.3)}
-.b-progress{background:rgba(0,212,255,.12);color:var(--accent);border:1px solid rgba(0,212,255,.25)}
-.b-done{background:rgba(6,214,160,.12);color:var(--success);border:1px solid rgba(6,214,160,.25)}
-.b-cancelled{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
-.b-high{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
-.b-medium{background:rgba(245,158,11,.12);color:var(--warning);border:1px solid rgba(245,158,11,.25)}
-.b-low{background:rgba(6,214,160,.12);color:var(--success);border:1px solid rgba(6,214,160,.25)}
-.b-admin{background:rgba(124,92,252,.15);color:var(--primary-light)}
-.b-manager{background:rgba(0,212,255,.12);color:var(--accent)}
-.b-employee{background:rgba(6,214,160,.12);color:var(--success)}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
-  z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--card-border);border-radius:20px;
-  width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
-  box-shadow:var(--shadow),0 0 60px rgba(124,92,252,.15);animation:popIn .25s ease}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:24px 28px 0;margin-bottom:20px}
-.modal-title{font-size:18px;font-weight:700}
-.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:28px;
-  padding:0;line-height:1;transition:color .2s}
-.modal-close:hover{color:var(--text)}
-.modal-body{padding:0 28px 28px}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-
-/* FILE UPLOAD */
-.upload-zone{border:2px dashed var(--card-border);border-radius:var(--radius-sm);
-  padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02)}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--primary);background:rgba(124,92,252,.06)}
-.upload-icon{font-size:32px;margin-bottom:8px}
-.file-list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-.file-item{display:flex;align-items:center;gap:10px;padding:10px 12px;
-  background:rgba(255,255,255,.04);border:1px solid var(--card-border);border-radius:var(--radius-sm)}
-.file-name{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.file-size{font-size:11px;color:var(--text3)}
-.file-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;transition:color .2s}
-.file-rm:hover{color:var(--danger)}
-
-/* FILTER BAR */
-.filter-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-.srch-wrap{position:relative;flex:1;min-width:200px}
-.srch-wrap input{width:100%;padding:10px 14px 10px 38px;background:var(--card);
-  border:1px solid var(--card-border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
-.srch-wrap input:focus{border-color:var(--primary)}
-.srch-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px}
-.flt-sel{padding:10px 14px;background:var(--card);border:1px solid var(--card-border);
-  border-radius:var(--radius-sm);color:var(--text2);font-family:'Inter',sans-serif;font-size:14px;
-  outline:none;cursor:pointer}
-.flt-sel option{background:var(--bg2)}
-
-/* AVATAR */
-.av-chip{display:inline-flex;align-items:center;gap:6px}
-.av-mini{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent2));
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-
-/* ACTIVITY */
-.act-list{display:flex;flex-direction:column}
-.act-item{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.act-item:last-child{border-bottom:none}
-.act-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.act-text{font-size:13px;color:var(--text);margin-bottom:2px}
-.act-time{font-size:11px;color:var(--text3)}
-
-/* CHARTS */
-.chart-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.chart-lbl{font-size:12px;color:var(--text2);width:90px;flex-shrink:0}
-.chart-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
-.chart-fill{height:100%;border-radius:99px;transition:width 1s ease}
-.chart-val{font-size:12px;color:var(--text3);width:28px;text-align:right}
-
-/* TOAST */
-#toastCont{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px}
-.toast{display:flex;align-items:center;gap:12px;padding:14px 18px;
-  background:var(--bg3);border:1px solid var(--card-border);border-radius:var(--radius-sm);
-  box-shadow:var(--shadow);animation:slideIn .3s ease;min-width:260px;max-width:360px;
-  font-size:14px;transition:opacity .4s;border-left-width:3px}
-.toast-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px}
-
-/* DASH */
-.dash-grid{display:grid;grid-template-columns:1fr 340px;gap:20px}
-.dash-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:22px}
-.dash-title{font-size:14px;font-weight:600;margin-bottom:18px}
-
-/* DETAIL PANEL */
-.detail-panel{position:fixed;right:0;top:0;bottom:0;width:480px;background:var(--bg2);
-  border-left:1px solid var(--card-border);z-index:150;padding:28px;overflow-y:auto;
-  transform:translateX(100%);transition:transform .3s ease;box-shadow:-8px 0 40px rgba(0,0,0,.4)}
-.detail-panel.open{transform:translateX(0)}
-.detail-ov{position:fixed;inset:0;z-index:140;display:none;background:rgba(0,0,0,.4)}
-.detail-ov.open{display:block}
-
-/* MISC */
-.actions{display:flex;gap:6px}
-.doc-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
-  background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.2);border-radius:99px;
-  font-size:11px;color:var(--primary-light);cursor:pointer;margin:2px}
-.doc-chip:hover{background:rgba(124,92,252,.2)}
-.divider{height:1px;background:var(--card-border);margin:16px 0}
-.info-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:13px}
-.info-lbl{color:var(--text3);min-width:100px}
-.tag{font-size:12px;color:var(--text3)}
-.flex-gap{display:flex;gap:6px;flex-wrap:wrap}
-
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-260px)}.main{margin-left:0}.dash-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
-</style>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #F5F6F8;
+      color: #151B2C;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, select, button { font-family: inherit; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.25s ease-out forwards; }
+    .hover-lift {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .hover-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .btn-action { transition: all 0.15s ease; }
+    .btn-action:hover { filter: brightness(1.08); transform: scale(1.02); }
+    .btn-action:active { transform: scale(0.98); }
+  </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="loginPage">
-<div class="login-box">
-  <div class="login-logo"><div class="logo-icon">&#128202;</div><h1>Demand<span>Flow</span></h1></div>
-  <p class="login-sub">Sign in to manage demands, tasks &amp; your team</p>
-  <div class="demo-box">
-    <strong>Demo Credentials</strong>
-    &#128308; Admin: admin@demo.com / admin123<br>
-    &#128993; Manager: manager@demo.com / mgr123<br>
-    &#128994; Employee: john@demo.com / emp123
+  <!-- Loading spinner shown until React renders -->
+  <div id="loading-screen" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141B33;font-family:sans-serif;">
+    <div style="width:48px;height:48px;border-radius:12px;background:#2F6FED;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;margin-bottom:18px;">S</div>
+    <div style="color:#fff;font-size:16px;font-weight:600;margin-bottom:10px;">SupportHub</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:20px;">Loading application...</div>
+    <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:#2F6FED;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
   </div>
-  <div class="form-group"><label for="loginEmail">Email</label><input type="email" id="loginEmail" placeholder="you@company.com"/></div>
-  <div class="form-group"><label for="loginPwd">Password</label><input type="password" id="loginPwd" placeholder="Enter password"/></div>
-  <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Sign In &#8594;</button>
-  <div class="err-msg" id="loginErr">Invalid email or password. Please try again.</div>
-</div>
-</div>
+  <div id="root"></div>
+  <script>
+    // Global error handler - shows message instead of blank screen
+    window.onerror = function(msg, src, line, col) {
+      var el = document.getElementById('loading-screen');
+      if(el) {
+        el.innerHTML = '<div style="padding:40px;text-align:center;color:#fff;"><div style="font-size:32px;margin-bottom:16px;">⚠️</div><div style="font-size:18px;font-weight:700;margin-bottom:10px;">Script Error</div><div style="font-size:13px;color:rgba(255,255,255,0.6);max-width:400px;">' + msg + '<br><br>Line: ' + line + (col ? ', Column: ' + col : '') + '</div><div style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.4);">Open browser DevTools (F12) → Console for details</div></div>';
+      }
+    };
+    // Hide loading screen once React mounts
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        var loader = document.getElementById('loading-screen');
+        if(root && loader) {
+          var obs = new MutationObserver(function() { if(root.children.length > 0){ loader.style.display='none'; obs.disconnect(); } });
+          obs.observe(root, {childList:true});
+        }
+      }, 100);
+    });
+  </script>
 
-<!-- APP -->
-<div id="app">
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo"><div class="sidebar-logo-icon">&#128202;</div><h2>Demand<span>Flow</span></h2></div>
-  <div class="nav-sect">Overview</div>
-  <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')"><span class="nav-icon">&#127968;</span>Dashboard</div>
-  <div class="nav-sect">Work</div>
-  <div class="nav-item" id="nav-demands" onclick="navigate('demands')"><span class="nav-icon">&#128203;</span>Demands<span class="nav-badge" id="dBadge">0</span></div>
-  <div class="nav-item" id="nav-tasks" onclick="navigate('tasks')"><span class="nav-icon">&#9989;</span>Tasks<span class="nav-badge" id="tBadge">0</span></div>
-  <div class="nav-sect">Team</div>
-  <div class="nav-item" id="nav-employees" onclick="navigate('employees')" style="display:none"><span class="nav-icon">&#128101;</span>Employees</div>
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="user-avatar" id="sbAvatar"></div>
-      <div class="user-info"><div class="user-name" id="sbName">-</div><div class="user-role" id="sbRole">-</div></div>
-      <button class="logout-btn" onclick="doLogout()" title="Logout">&#8263;</button>
-    </div>
-  </div>
-</aside>
+  <script id="supporthub-app-source" type="text/plain">
+    const { useState, useEffect, useMemo } = React;
+    const {
+      ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+      Tooltip, PieChart, Pie, Cell, BarChart, Bar
+    } = window.Recharts || {};
 
-<div class="main">
-  <div class="topbar">
-    <div style="flex:1"><span class="topbar-title" id="pgTitle">Dashboard</span><span class="topbar-sub" id="pgSub"></span></div>
-    <button class="btn btn-primary btn-sm" id="actionBtn" onclick="topbarAction()" style="display:none">+ New</button>
-  </div>
-  <div class="content">
+    /* ---------------------------------- ICONS HELPER ---------------------------------- */
+    const Icons = {
+      LayoutDashboard: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      ),
+      Ticket: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+      ),
+      Users: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      ),
+      ShieldCheck: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+      ),
+      FileSignature: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V11"/><polyline points="14 2 14 8 20 8"/><path d="M18.42 15.61a2.1 2.1 0 1 1 2.97 2.97L15 24h-3v-3l6.42-5.39z"/></svg>
+      ),
+      Search: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      ),
+      Bell: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      ),
+      LogIn: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+      ),
+      LogOut: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      ),
+      Plus: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      ),
+      X: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      ),
+      Circle: ({ size = 8, color = "currentColor", fill = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>
+      ),
+      ChevronRight: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      ),
+      AlertCircle: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      ),
+      CheckCircle2: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      ),
+      Clock: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ),
+      TrendingUp: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      ),
+      Database: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+      ),
+      RefreshCw: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      ),
+      Lock: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      ),
+      Key: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
+      ),
+      UserCheck: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+      ),
+    };
 
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="stats-grid" id="statsGrid"></div>
-      <div class="dash-grid">
-        <div>
-          <div class="dash-card" style="margin-bottom:20px">
-            <div class="dash-title">&#128200; Demand Status</div><div id="demandChart"></div>
+    /* ---------------------------------- THEME COLORS ---------------------------------- */
+    const COLORS = {
+      ink: "#151B2C",
+      navy: "#1C2540",
+      navyDeep: "#141B33",
+      paper: "#F5F6F8",
+      card: "#FFFFFF",
+      line: "#E6E8EE",
+      sub: "#6B7280",
+      accent: "#2F6FED",
+      accentSoft: "#E8EFFE",
+      amber: "#B7791F",
+      amberSoft: "#FBF0DD",
+      green: "#1C8A5A",
+      greenSoft: "#E4F5EC",
+      red: "#C0392B",
+      redSoft: "#FBE9E7",
+      purple: "#7C3AED",
+      purpleSoft: "#F3E8FF",
+    };
+
+    const priorityColor = (p) =>
+      p === "Critical" ? COLORS.red : p === "High" ? "#C0392B" : p === "Medium" ? COLORS.amber : COLORS.sub;
+
+    const statusStyle = (s) => {
+      if (s === "Open") return { bg: COLORS.redSoft, fg: COLORS.red };
+      if (s === "In Progress") return { bg: COLORS.amberSoft, fg: COLORS.amber };
+      if (s === "Resolved") return { bg: COLORS.greenSoft, fg: COLORS.green };
+      if (s === "Sent") return { bg: COLORS.accentSoft, fg: COLORS.accent };
+      if (s === "Accepted") return { bg: COLORS.greenSoft, fg: COLORS.green };
+      if (s === "Declined") return { bg: COLORS.redSoft, fg: COLORS.red };
+      return { bg: "#EEE", fg: COLORS.sub };
+    };
+
+    function Pill({ children, bg, fg }) {
+      return (
+        <span style={{
+          background: bg, color: fg, fontSize: 12, fontWeight: 600,
+          padding: "4px 10px", borderRadius: 20, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center"
+        }}>{children}</span>
+      );
+    }
+
+    function StatCard({ label, value, delta, icon: Icon, tone }) {
+      return (
+        <div className="hover-lift" style={{
+          background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12,
+          padding: "18px 20px", flex: 1, minWidth: 200, boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: 12.5, color: COLORS.sub, fontWeight: 600, marginBottom: 8 }}>{label}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.ink, letterSpacing: -0.5 }}>{value}</div>
+            </div>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, background: tone + "1A",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <Icon size={18} color={tone} />
+            </div>
           </div>
-          <div class="dash-card">
-            <div class="dash-title">&#128221; Recent Activity</div><div class="act-list" id="actList"></div>
+          {delta && <div style={{ fontSize: 12, color: COLORS.green, marginTop: 10, fontWeight: 600 }}>{delta}</div>}
+        </div>
+      );
+    }
+
+    function Toast({ toast }) {
+      if (!toast) return null;
+      const isErr = toast.type === "error";
+      return (
+        <div style={{
+          position: "fixed", bottom: 24, right: 24, zIndex: 9999,
+          background: isErr ? COLORS.red : COLORS.navy, color: "#fff",
+          padding: "12px 20px", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+          display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, fontWeight: 500,
+          animation: "fadeIn 0.2s ease-out"
+        }}>
+          {isErr ? <Icons.AlertCircle size={17} color="#fff" /> : <Icons.CheckCircle2 size={17} color="#4ADE80" />}
+          {toast.message}
+        </div>
+      );
+    }
+
+    /* ---------------------------------- LOGIN SCREEN (2FA MOBILE AUTH) ---------------------------------- */
+    function LoginScreen({ onLoginSuccess }) {
+      const [step, setStep] = useState("credentials"); // "credentials" | "mobile_auth"
+      const [empId, setEmpId] = useState("E-105");
+      const [password, setPassword] = useState("admin123");
+      const [authCode, setAuthCode] = useState("");
+      const [authInfo, setAuthInfo] = useState(null); // { emp_id, name, masked_phone, auth_code_preview }
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+      const [resendTimer, setResendTimer] = useState(0);
+
+      useEffect(() => {
+        let interval = null;
+        if (resendTimer > 0) {
+          interval = setInterval(() => setResendTimer(t => t - 1), 1000);
+        }
+        return () => clearInterval(interval);
+      }, [resendTimer]);
+
+      // Step 1: Validate Emp ID & Password
+      const handleInitiateLogin = async (e) => {
+        if (e) e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch("/api/auth/initiate-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emp_id: empId.trim(), password: password.trim() })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Invalid Employee ID or Password");
+          setAuthInfo(data);
+          setStep("mobile_auth");
+          setAuthCode(data.auth_code_preview || ""); // prefill demo OTP for convenience
+          setResendTimer(30);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Step 2: Verify 6-digit Mobile Auth code
+      const handleVerifyAuthCode = async (e) => {
+        if (e) e.preventDefault();
+        if (!authCode) return;
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch("/api/auth/verify-mobile-auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emp_id: authInfo.emp_id, auth_code: authCode.trim() })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Invalid or expired Auth Code");
+          onLoginSuccess(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleResendCode = async () => {
+        if (resendTimer > 0 || !authInfo) return;
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch("/api/auth/resend-mobile-auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emp_id: authInfo.emp_id })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to resend Auth Code");
+          setAuthInfo(data);
+          setAuthCode(data.auth_code_preview || "");
+          setResendTimer(30);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const quickSelect = (id, pw) => {
+        setEmpId(id);
+        setPassword(pw);
+        setStep("credentials");
+        setError("");
+      };
+
+      return (
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #141B33 0%, #1C2540 100%)", padding: 20, position: "relative" }}>
+          
+          {/* Simulated SMS Notification Banner */}
+          {step === "mobile_auth" && authInfo && (
+            <div className="fade-in hover-lift" style={{
+              position: "fixed", top: 24, right: 24, zIndex: 10000,
+              background: "#FFFFFF", color: COLORS.ink,
+              border: `1px solid ${COLORS.accent}`, borderRadius: 12,
+              padding: "14px 18px", boxShadow: "0 12px 32px rgba(0,0,0,0.22)",
+              maxWidth: 380, width: "calc(100% - 48px)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 16 }}>📱</span>
+                <span style={{ fontWeight: 700, fontSize: 13, color: COLORS.accent }}>Incoming SMS · Mobile Auth ID</span>
+                <span style={{ marginLeft: "auto", fontSize: 11, color: COLORS.sub }}>Just now</span>
+              </div>
+              <div style={{ fontSize: 13, color: COLORS.ink }}>
+                Your SupportHub Mobile Verification Code for <b>{authInfo.name}</b> is:
+                <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.navy, letterSpacing: 2, margin: "6px 0", background: "#F1F5F9", padding: "4px 8px", borderRadius: 6, display: "inline-block" }}>
+                  {authInfo.auth_code_preview}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthCode(authInfo.auth_code_preview);
+                  handleVerifyAuthCode();
+                }}
+                style={{
+                  marginTop: 6, width: "100%", padding: "6px", borderRadius: 6,
+                  border: "none", background: COLORS.accent, color: "#fff",
+                  fontSize: 12, fontWeight: 600, cursor: "pointer"
+                }}
+              >
+                Auto-fill & Log In Instantly
+              </button>
+            </div>
+          )}
+
+          <div className="fade-in" style={{ width: "100%", maxWidth: 450, background: "#FFFFFF", borderRadius: 18, padding: "36px 32px", boxShadow: "0 20px 40px rgba(0,0,0,0.28)" }}>
+            <div style={{ textAlign: "center", marginBottom: 26 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#fff", fontWeight: 800, fontSize: 22 }}>
+                S
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: COLORS.ink, letterSpacing: -0.5 }}>SupportHub Login</h2>
+              <p style={{ fontSize: 13, color: COLORS.sub, marginTop: 4 }}>
+                {step === "credentials" ? "Employee ID & Mobile Two-Factor Authentication" : "Step 2: 2-Factor Mobile Auth Verification"}
+              </p>
+            </div>
+
+            {error && (
+              <div style={{ background: COLORS.redSoft, color: COLORS.red, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icons.AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* STEP 1: Emp ID + Password Form */}
+            {step === "credentials" ? (
+              <form onSubmit={handleInitiateLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.ink, marginBottom: 6 }}>Employee ID (Emp ID)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. E-105 or E-101"
+                    value={empId}
+                    onChange={e => setEmpId(e.target.value)}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 14, outline: "none" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.ink, marginBottom: 6 }}>Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 14, outline: "none" }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-action"
+                  style={{
+                    background: COLORS.accent, color: "#fff", border: "none", borderRadius: 8,
+                    padding: "12px", fontSize: 14.5, fontWeight: 700, cursor: "pointer", marginTop: 4,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                  }}
+                >
+                  {loading ? "Verifying Credentials..." : (
+                    <>
+                      <span>Next: Mobile Auth Code</span> <Icons.ChevronRight size={16} />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              /* STEP 2: Mobile Auth Code (OTP) Form */
+              <form onSubmit={handleVerifyAuthCode} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ background: "#F8FAFC", border: `1px solid ${COLORS.line}`, padding: "12px 14px", borderRadius: 10, fontSize: 13 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: COLORS.ink }}>
+                    <span>📱</span> Sent to Registered Mobile:
+                  </div>
+                  <div style={{ color: COLORS.navy, fontWeight: 700, fontSize: 14, marginTop: 4 }}>
+                    {authInfo?.masked_phone}
+                  </div>
+                  <div style={{ color: COLORS.sub, fontSize: 12, marginTop: 2 }}>
+                    Logged in as <b>{authInfo?.name}</b> ({authInfo?.emp_id})
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.ink, marginBottom: 6 }}>
+                    Enter 6-Digit Mobile Auth Code (OTP)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    maxLength={10}
+                    placeholder="e.g. 849201"
+                    value={authCode}
+                    onChange={e => setAuthCode(e.target.value)}
+                    style={{
+                      width: "100%", padding: "12px 14px", borderRadius: 8, border: `2px solid ${COLORS.accent}`,
+                      fontSize: 18, fontWeight: 700, letterSpacing: 4, textAlign: "center", outline: "none"
+                    }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-action"
+                  style={{
+                    background: COLORS.green, color: "#fff", border: "none", borderRadius: 8,
+                    padding: "12px", fontSize: 14.5, fontWeight: 700, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+                  }}
+                >
+                  {loading ? "Verifying Mobile Code..." : (
+                    <>
+                      <Icons.CheckCircle2 size={17} color="#fff" /> Verify & Complete Login
+                    </>
+                  )}
+                </button>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5 }}>
+                  <button
+                    type="button"
+                    onClick={() => setStep("credentials")}
+                    style={{ background: "none", border: "none", color: COLORS.sub, cursor: "pointer", fontWeight: 600 }}
+                  >
+                    ← Change ID / Password
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={resendTimer > 0}
+                    onClick={handleResendCode}
+                    style={{
+                      background: "none", border: "none",
+                      color: resendTimer > 0 ? COLORS.sub : COLORS.accent,
+                      cursor: resendTimer > 0 ? "not-allowed" : "pointer", fontWeight: 600
+                    }}
+                  >
+                    {resendTimer > 0 ? `Resend code in ${resendTimer}s` : "Resend Code"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div style={{ marginTop: 24, paddingTop: 18, borderTop: `1px solid ${COLORS.line}` }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.sub, marginBottom: 10, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Quick Login with 2FA Mobile Auth (Click to test)
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => quickSelect("E-105", "admin123")}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.paper, textAlign: "left", cursor: "pointer", fontSize: 12 }}
+                >
+                  <div style={{ fontWeight: 700, color: COLORS.ink }}>👑 Admin (Full Access)</div>
+                  <div style={{ color: COLORS.sub, fontSize: 11 }}>ID: E-105 (Neha) · Mobile 2FA</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickSelect("E-101", "password123")}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.paper, textAlign: "left", cursor: "pointer", fontSize: 12 }}
+                >
+                  <div style={{ fontWeight: 700, color: COLORS.accent }}>🛠️ Support Team</div>
+                  <div style={{ color: COLORS.sub, fontSize: 11 }}>ID: E-101 (Ananya) · Mobile 2FA</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickSelect("E-103", "password123")}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.paper, textAlign: "left", cursor: "pointer", fontSize: 12 }}
+                >
+                  <div style={{ fontWeight: 700, color: COLORS.green }}>👥 HR Executive</div>
+                  <div style={{ color: COLORS.sub, fontSize: 11 }}>ID: E-103 (Divya) · Mobile 2FA</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickSelect("E-102", "password123")}
+                  style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: COLORS.paper, textAlign: "left", cursor: "pointer", fontSize: 12 }}
+                >
+                  <div style={{ fontWeight: 700, color: COLORS.amber }}>🔍 QA Analyst</div>
+                  <div style={{ color: COLORS.sub, fontSize: 11 }}>ID: E-102 (Vikram) · Mobile 2FA</div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div>
-          <div class="dash-card" style="margin-bottom:20px">
-            <div class="dash-title">&#9889; Quick Actions</div><div style="display:flex;flex-direction:column;gap:10px" id="quickActs"></div>
+      );
+    }
+
+    /* ---------------------------------- DASHBOARD ---------------------------------- */
+    function Dashboard({ tickets, stats, activityLogs }) {
+      const resolved = tickets.filter(t => t.status === "Resolved").length;
+      const open = tickets.filter(t => t.status === "Open").length;
+      const inProgress = tickets.filter(t => t.status === "In Progress").length;
+
+      const pieData = [
+        { name: "Resolved", value: resolved || 1, color: COLORS.green },
+        { name: "In Progress", value: inProgress || 1, color: COLORS.amber },
+        { name: "Open", value: open || 1, color: COLORS.red },
+      ];
+
+      const weeklyTrend = stats?.weeklyTrend || [
+        { day: "Mon", received: 14, resolved: 11 },
+        { day: "Tue", received: 18, resolved: 15 },
+        { day: "Wed", received: 9, resolved: 12 },
+        { day: "Thu", received: 21, resolved: 16 },
+        { day: "Fri", received: 16, resolved: 14 },
+        { day: "Sat", received: 6, resolved: 8 },
+        { day: "Sun", received: 4, resolved: 5 },
+      ];
+
+      return (
+        <div className="fade-in">
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
+            <StatCard label="Tickets received (Total)" value={tickets.length} delta="+12% vs last week" icon={Icons.Ticket} tone={COLORS.accent} />
+            <StatCard label="Resolved" value={resolved} delta={`${tickets.length > 0 ? Math.round((resolved / tickets.length) * 100) : 100}% resolution rate`} icon={Icons.CheckCircle2} tone={COLORS.green} />
+            <StatCard label="Currently open" value={open + inProgress} icon={Icons.AlertCircle} tone={COLORS.amber} />
+            <StatCard label="Avg. resolution time" value="6.4h" delta="-1.1h vs last week" icon={Icons.Clock} tone={COLORS.navy} />
           </div>
-          <div class="dash-card"><div class="dash-title">&#128202; Task Priority</div><div id="taskChart"></div></div>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 2, minWidth: 340, background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink }}>Tickets received vs resolved</div>
+                <div style={{ fontSize: 12.5, color: COLORS.sub }}>SQL Live Trend</div>
+              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={weeklyTrend}>
+                  <defs>
+                    <linearGradient id="recv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={COLORS.accent} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={COLORS.accent} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="res" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={COLORS.green} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={COLORS.green} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.line} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} width={26} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 12.5 }} />
+                  <Area type="monotone" dataKey="received" stroke={COLORS.accent} fill="url(#recv)" strokeWidth={2} name="Received" />
+                  <Area type="monotone" dataKey="resolved" stroke={COLORS.green} fill="url(#res)" strokeWidth={2} name="Resolved" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div style={{ flex: 1, minWidth: 260, background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginBottom: 12 }}>Ticket status split</div>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={4}>
+                    {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 12.5 }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+                {pieData.map((d, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8, color: COLORS.ink }}>
+                      <Icons.Circle size={8} fill={d.color} color={d.color} /> {d.name}
+                    </span>
+                    <span style={{ fontWeight: 600, color: COLORS.ink }}>{d.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 16 }}>
+            <div style={{ flex: 1, minWidth: 340, background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginBottom: 12 }}>Employee activity log — SQL Database</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 240, overflowY: "auto" }}>
+                {activityLogs.slice(0, 8).map((a, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8, background: a.action === "login" ? COLORS.greenSoft : COLORS.redSoft,
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                    }}>
+                      {a.action === "login" ? <Icons.LogIn size={14} color={COLORS.green} /> : <Icons.LogOut size={14} color={COLORS.red} />}
+                    </div>
+                    <span style={{ color: COLORS.ink, fontWeight: 600 }}>{a.emp}</span>
+                    <span style={{ color: COLORS.sub }}>{a.action === "login" ? "logged in" : "logged out"} at {a.time}</span>
+                    <span style={{ marginLeft: "auto", color: COLORS.sub, fontSize: 12 }}>{a.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ flex: 1, minWidth: 260, background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginBottom: 12 }}>Tickets by priority</div>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={[
+                  { name: "Critical", count: tickets.filter(t => t.priority === "Critical").length },
+                  { name: "High", count: tickets.filter(t => t.priority === "High").length },
+                  { name: "Medium", count: tickets.filter(t => t.priority === "Medium").length },
+                  { name: "Low", count: tickets.filter(t => t.priority === "Low").length },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.line} vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11.5, fill: COLORS.sub }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} width={24} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 12.5 }} />
+                  <Bar dataKey="count" radius={[5, 5, 0, 0]} fill={COLORS.navy} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      );
+    }
 
-    <!-- DEMANDS -->
-    <div class="page" id="page-demands">
-      <div class="filter-bar">
-        <div class="srch-wrap"><span class="srch-icon">&#128269;</span><input type="text" id="dSearch" placeholder="Search demands..." oninput="renderDemands()"/></div>
-        <select class="flt-sel" id="dStatusF" onchange="renderDemands()"><option value="">All Status</option><option>Pending</option><option>In Progress</option><option>Done</option><option>Cancelled</option></select>
-        <select class="flt-sel" id="dPriF" onchange="renderDemands()"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Demand</th><th>Client</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Docs</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="dTable"></tbody>
-      </table></div>
-    </div>
+    /* ---------------------------------- ISSUE TRACKER ---------------------------------- */
+    function IssueTracker({ tickets, onAddTicket, onCycleStatus, onDeleteTicket, searchQuery, currentUser }) {
+      const [filter, setFilter] = useState("All");
+      const [showForm, setShowForm] = useState(false);
+      const [form, setForm] = useState({ title: "", requester: currentUser?.name || "", priority: "Medium" });
 
-    <!-- TASKS -->
-    <div class="page" id="page-tasks">
-      <div class="filter-bar">
-        <div class="srch-wrap"><span class="srch-icon">&#128269;</span><input type="text" id="tSearch" placeholder="Search tasks..." oninput="renderTasks()"/></div>
-        <select class="flt-sel" id="tStatusF" onchange="renderTasks()"><option value="">All Status</option><option>Pending</option><option>In Progress</option><option>Done</option></select>
-        <select class="flt-sel" id="tPriF" onchange="renderTasks()"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Task</th><th>Demand</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Actions</th></tr></thead>
-        <tbody id="tTable"></tbody>
-      </table></div>
-    </div>
+      const filtered = tickets.filter(t => {
+        const matchesFilter = filter === "All" ? true : t.status === filter;
+        const matchesSearch = !searchQuery || 
+          t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.requester.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.id.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesFilter && matchesSearch;
+      });
 
-    <!-- EMPLOYEES -->
-    <div class="page" id="page-employees">
-      <div class="filter-bar">
-        <div class="srch-wrap"><span class="srch-icon">&#128269;</span><input type="text" id="eSearch" placeholder="Search employees..." oninput="renderEmployees()"/></div>
-        <select class="flt-sel" id="eRoleF" onchange="renderEmployees()"><option value="">All Roles</option><option value="admin">Admin</option><option value="manager">Manager</option><option value="employee">Employee</option></select>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Employee</th><th>Email</th><th>Department</th><th>Position</th><th>Role</th><th>Actions</th></tr></thead>
-        <tbody id="eTable"></tbody>
-      </table></div>
-    </div>
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!form.title || !form.requester) return;
+        onAddTicket(form);
+        setForm({ title: "", requester: currentUser?.name || "", priority: "Medium" });
+        setShowForm(false);
+      };
 
-  </div>
-</div>
-</div>
+      return (
+        <div className="fade-in">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              {["All", "Open", "In Progress", "Resolved"].map(f => (
+                <button key={f} onClick={() => setFilter(f)} style={{
+                  padding: "7px 14px", borderRadius: 8, border: `1px solid ${filter === f ? COLORS.navy : COLORS.line}`,
+                  background: filter === f ? COLORS.navy : COLORS.card, color: filter === f ? "#fff" : COLORS.ink,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease"
+                }}>{f}</button>
+              ))}
+            </div>
+            <button className="btn-action" onClick={() => setShowForm(!showForm)} style={{
+              display: "flex", alignItems: "center", gap: 6, background: COLORS.accent, color: "#fff",
+              border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+            }}>
+              <Icons.Plus size={16} /> New ticket
+            </button>
+          </div>
 
-<!-- DEMAND MODAL -->
-<div class="modal-overlay" id="demandModal">
-<div class="modal">
-  <div class="modal-header"><h3 class="modal-title" id="dMTitle">Create Demand</h3><button class="modal-close" onclick="closeDM()">&times;</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="dId"/>
-    <div class="form-row">
-      <div class="form-group"><label>Title *</label><input type="text" id="dTitle" placeholder="Demand title"/></div>
-      <div class="form-group"><label>Client *</label><input type="text" id="dClient" placeholder="Client name"/></div>
-    </div>
-    <div class="form-group"><label>Assign Demand To Employee</label><select id="dAssignee"><option value="">Select Employee (optional)</option></select></div>
-    <div class="form-group"><label>Description</label><textarea id="dDesc" placeholder="Describe requirements..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Priority</label><select id="dPri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      <div class="form-group"><label>Status</label><select id="dStatus"><option>Pending</option><option>In Progress</option><option>Done</option><option>Cancelled</option></select></div>
-    </div>
-    <div class="form-group">
-      <label>Attach Documents</label>
-      <div class="upload-zone" id="fileZone" onclick="document.getElementById('fileIn').click()" ondragover="fDragOver(event)" ondrop="fDrop(event)" ondragleave="fDragLeave()">
-        <div class="upload-icon">&#128206;</div>
-        <p><span style="color:var(--primary-light);font-weight:600">Click to upload</span> or drag &amp; drop</p>
-        <p style="font-size:11px;color:var(--text3);margin-top:4px">Any file type accepted</p>
-      </div>
-      <input type="file" id="fileIn" multiple style="display:none" onchange="handleFiles(this.files)"/>
-      <div class="file-list" id="fileList"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeDM()">Cancel</button>
-      <button class="btn btn-primary" style="width:auto" onclick="saveDemand()">&#128190; Save Demand</button>
-    </div>
-  </div>
-</div>
-</div>
+          {showForm && (
+            <form onSubmit={handleSubmit} style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 18, marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <input placeholder="Issue title / description" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+                style={{ flex: 2, minWidth: 200, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <input placeholder="Requester name" required value={form.requester} onChange={e => setForm({ ...form, requester: e.target.value })}
+                style={{ flex: 1, minWidth: 160, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}
+                style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+              </select>
+              <button type="submit" className="btn-action" style={{ background: COLORS.navy, color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>Save to SQL</button>
+            </form>
+          )}
 
-<!-- TASK MODAL -->
-<div class="modal-overlay" id="taskModal">
-<div class="modal">
-  <div class="modal-header"><h3 class="modal-title" id="tMTitle">Create Task</h3><button class="modal-close" onclick="closeTM()">&times;</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="tId"/>
-    <div class="form-group"><label>Task Title *</label><input type="text" id="tTitle" placeholder="e.g. Design homepage"/></div>
-    <div class="form-group"><label>Description</label><textarea id="tDesc" placeholder="Describe the task..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Linked Demand</label><select id="tDemand"><option value="">None</option></select></div>
-      <div class="form-group"><label>Assign To Employee *</label><select id="tAssignee"><option value="">Select Employee</option></select></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Priority</label><select id="tPri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      <div class="form-group"><label>Status</label><select id="tStatus"><option>Pending</option><option>In Progress</option><option>Done</option></select></div>
-    </div>
-    <div class="form-group"><label>Due Date</label><input type="date" id="tDue"/></div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeTM()">Cancel</button>
-      <button class="btn btn-primary" style="width:auto" onclick="saveTask()">&#128190; Save Task</button>
-    </div>
-  </div>
-</div>
-</div>
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+              <thead>
+                <tr style={{ background: COLORS.paper, textAlign: "left" }}>
+                  {["Ticket ID", "Issue Title", "Requester", "Priority", "Status (Click to cycle)", "Assignee", "Created", ""].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", color: COLORS.sub, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" style={{ padding: "32px", textAlign: "center", color: COLORS.sub }}>No tickets found matching criteria.</td>
+                  </tr>
+                ) : (
+                  filtered.map(t => {
+                    const s = statusStyle(t.status);
+                    return (
+                      <tr key={t.id} style={{ borderTop: `1px solid ${COLORS.line}` }}>
+                        <td style={{ padding: "14px 16px", color: COLORS.sub, fontWeight: 600 }}>{t.id}</td>
+                        <td style={{ padding: "14px 16px", color: COLORS.ink, fontWeight: 500 }}>{t.title}</td>
+                        <td style={{ padding: "14px 16px", color: COLORS.sub }}>{t.requester}</td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <span style={{ color: priorityColor(t.priority), fontWeight: 600 }}>{t.priority}</span>
+                        </td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <button onClick={() => onCycleStatus(t.id)} title="Click to advance status in SQL" style={{ border: "none", cursor: "pointer", background: "none", padding: 0 }}>
+                            <Pill bg={s.bg} fg={s.fg}>
+                              {t.status} <span style={{ marginLeft: 4, opacity: 0.6 }}>↻</span>
+                            </Pill>
+                          </button>
+                        </td>
+                        <td style={{ padding: "14px 16px", color: COLORS.sub }}>{t.assignee}</td>
+                        <td style={{ padding: "14px 16px", color: COLORS.sub }}>{t.created}</td>
+                        <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                          <button onClick={() => onDeleteTicket(t.id)} title="Delete ticket" style={{ border: "none", background: "none", cursor: "pointer", color: COLORS.sub, padding: 4 }}>
+                            <Icons.X size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
 
-<!-- EMPLOYEE MODAL -->
-<div class="modal-overlay" id="empModal">
-<div class="modal">
-  <div class="modal-header"><h3 class="modal-title" id="eMTitle">Add Employee</h3><button class="modal-close" onclick="closeEM()">&times;</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="eId"/>
-    <div class="form-row">
-      <div class="form-group"><label>Full Name *</label><input type="text" id="eName" placeholder="John Smith"/></div>
-      <div class="form-group"><label>Email *</label><input type="email" id="eEmail" placeholder="john@company.com"/></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Department</label><input type="text" id="eDept" placeholder="Engineering"/></div>
-      <div class="form-group"><label>Position</label><input type="text" id="ePos" placeholder="Developer"/></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Role</label><select id="eRole"><option value="employee">Employee</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
-      <div class="form-group"><label>Password *</label><input type="password" id="ePwd" placeholder="Set password"/></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeEM()">Cancel</button>
-      <button class="btn btn-primary" style="width:auto" onclick="saveEmp()">&#128190; Save Employee</button>
-    </div>
-  </div>
-</div>
-</div>
+    /* ---------------------------------- EMPLOYEE DIRECTORY ---------------------------------- */
+    function Employee({ employees, activityLogs, onToggleStatus, searchQuery, currentUser }) {
+      const dotColor = (s) => s === "online" ? COLORS.green : s === "away" ? COLORS.amber : "#9CA3AF";
 
-<!-- DETAIL PANEL -->
-<div class="detail-ov" id="detailOv" onclick="closeDetail()"></div>
-<div class="detail-panel" id="detailPanel"></div>
-<div id="toastCont"></div>
+      const filtered = employees.filter(e => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.dept.toLowerCase().includes(q) || e.role.toLowerCase().includes(q) || e.id.toLowerCase().includes(q);
+      });
 
-<script>
-var DB={users:[],demands:[],tasks:[],activity:[]};
-var CU=null,pFiles=[],eFiles=[];
+      return (
+        <div className="fade-in">
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+              <thead>
+                <tr style={{ background: COLORS.paper, textAlign: "left" }}>
+                  {["Emp ID", "Employee", "Role", "Department", "Mobile (2FA)", "Status (Click to toggle)", "Last login", "Last logout"].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", color: COLORS.sub, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(e => (
+                  <tr key={e.id} style={{ borderTop: `1px solid ${COLORS.line}`, background: currentUser?.id === e.id ? "#F8FAFF" : "transparent" }}>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub, fontWeight: 700 }}>
+                      <span style={{ background: "#EEF2F6", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}>{e.id}</span>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ fontWeight: 600, color: COLORS.ink, display: "flex", alignItems: "center", gap: 6 }}>
+                        {e.name} {currentUser?.id === e.id && <span style={{ fontSize: 11, background: COLORS.accentSoft, color: COLORS.accent, padding: "1px 6px", borderRadius: 4 }}>You</span>}
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.sub }}>{e.email}</div>
+                    </td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.role}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.dept}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub, fontSize: 13, fontFamily: "monospace" }}>{e.phone || "—"}</td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <button onClick={() => onToggleStatus(e.id)} style={{ border: `1px solid ${COLORS.line}`, background: "#F8FAFC", borderRadius: 20, padding: "4px 12px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <Icons.Circle size={9} fill={dotColor(e.status)} color={dotColor(e.status)} />
+                        <span style={{ fontSize: 12.5, fontWeight: 600, textTransform: "capitalize", color: COLORS.ink }}>{e.status}</span>
+                      </button>
+                    </td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.lastLogin}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.lastLogout}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-var DEMO=[
-  {id:'u1',name:'Admin User',email:'admin@demo.com',password:'admin123',role:'admin',department:'Management',position:'System Admin'},
-  {id:'u2',name:'Alice Manager',email:'manager@demo.com',password:'mgr123',role:'manager',department:'Operations',position:'Project Manager'},
-  {id:'u3',name:'John Employee',email:'john@demo.com',password:'emp123',role:'employee',department:'Engineering',position:'Developer'},
-  {id:'u4',name:'Sara Dev',email:'sara@demo.com',password:'emp123',role:'employee',department:'Design',position:'UI Designer'}
-];
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+              <Icons.Clock size={16} color={COLORS.navy} /> Login / logout history (SQL Table: activity_logs)
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {activityLogs.map((a, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, paddingBottom: 10, borderBottom: i < activityLogs.length - 1 ? `1px solid ${COLORS.line}` : "none" }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: 6, background: a.action === "login" ? COLORS.greenSoft : COLORS.redSoft,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {a.action === "login" ? <Icons.LogIn size={13} color={COLORS.green} /> : <Icons.LogOut size={13} color={COLORS.red} />}
+                  </div>
+                  <span style={{ fontWeight: 600, color: COLORS.ink }}>{a.emp}</span>
+                  <span style={{ color: COLORS.sub }}>{a.action} at {a.time}, {a.date}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-function loadDB(){
-  var s=localStorage.getItem('dfdb');
-  if(s){DB=JSON.parse(s);return;}
-  DB.users=DEMO;
-  var n=Date.now();
-  DB.demands=[
-    {id:'d1',title:'E-commerce Platform Redesign',client:'TechCorp Ltd',description:'Full redesign with modern UI/UX.',priority:'High',status:'In Progress',by:'u2',at:new Date(n-5*864e5).toISOString(),documents:[]},
-    {id:'d2',title:'Mobile App Development',client:'StartupXYZ',description:'Cross-platform inventory app.',priority:'Medium',status:'Pending',by:'u2',at:new Date(n-2*864e5).toISOString(),documents:[]},
-    {id:'d3',title:'API Integration Project',client:'GlobalBank',description:'Payment gateway API integration.',priority:'High',status:'Done',by:'u1',at:new Date(n-10*864e5).toISOString(),documents:[],assignedTo:''}
-  ];
-  DB.tasks=[
-    {id:'t1',title:'Create wireframes',desc:'Low-fidelity wireframes for all pages.',did:'d1',to:'u4',priority:'High',status:'In Progress',due:'2026-09-30',by:'u2',at:new Date(n-4*864e5).toISOString()},
-    {id:'t2',title:'Set up project repo',desc:'Initialize Git repo and CI/CD.',did:'d1',to:'u3',priority:'Medium',status:'Done',due:'2026-09-20',by:'u2',at:new Date(n-3*864e5).toISOString()},
-    {id:'t3',title:'API docs review',desc:'Review and validate API documentation.',did:'d2',to:'u3',priority:'Low',status:'Pending',due:'2026-10-05',by:'u2',at:new Date(n-864e5).toISOString()}
-  ];
-  DB.activity=[
-    {text:'John completed task: Set up project repo',time:new Date(n-3*36e5).toISOString(),color:'var(--success)'},
-    {text:'Alice created demand: Mobile App Development',time:new Date(n-6*36e5).toISOString(),color:'var(--primary)'},
-    {text:'New task assigned to Sara Dev',time:new Date(n-12*36e5).toISOString(),color:'var(--accent)'}
-  ];
-  save();
-}
-function save(){localStorage.setItem('dfdb',JSON.stringify(DB));}
-function uid(){return '_'+Math.random().toString(36).substr(2,9);}
+    /* ---------------------------------- ADMIN PANEL & PERMISSIONS MATRIX ---------------------------------- */
+    function Admin({ employees, permissions, onAddEmployee, onBulkImport, onDeleteEmployee, onUpdatePermissions, onResetPassword }) {
+      const [showForm, setShowForm] = useState(false);
+      const [showImport, setShowImport] = useState(false);
+      const [importFile, setImportFile] = useState(null);
+      const [importing, setImporting] = useState(false);
+      const [importResult, setImportResult] = useState(null);
+      const [form, setForm] = useState({ name: "", role: "Support Engineer", dept: "IT Support", email: "", phone: "", password: "password123" });
+      const [localPerms, setLocalPerms] = useState({});
+      const [resetModal, setResetModal] = useState({ open: false, emp: null, newPassword: "" });
 
-function doLogin(){
-  var em=document.getElementById('loginEmail').value.trim();
-  var pw=document.getElementById('loginPwd').value;
-  var u=DB.users.find(function(x){return x.email.toLowerCase()===em.toLowerCase()&&x.password===pw;});
-  if(!u){document.getElementById('loginErr').style.display='block';return;}
-  document.getElementById('loginErr').style.display='none';
-  CU=u;sessionStorage.setItem('dfcu',u.id);showApp();
-}
-document.getElementById('loginPwd').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
-document.getElementById('loginEmail').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+      const roles = ["Admin", "Support Engineer", "HR Executive", "QA Analyst", "Engineering Lead"];
+      const depts = ["IT Support", "Quality", "Human Resources", "Operations", "Engineering"];
+      const allModules = [
+        { key: "dashboard", label: "Dashboard" },
+        { key: "tracker", label: "Issue Tracker" },
+        { key: "employee", label: "Employee Directory" },
+        { key: "admin", label: "Admin & Permissions" },
+        { key: "offer", label: "Offer Letters" },
+      ];
 
-function doLogout(){
-  CU=null;sessionStorage.removeItem('dfcu');
-  document.getElementById('app').classList.remove('active');
-  document.getElementById('loginPage').style.display='flex';
-  document.getElementById('loginEmail').value='';
-  document.getElementById('loginPwd').value='';
-}
+      useEffect(() => {
+        const map = {};
+        permissions.forEach(p => {
+          map[p.role] = p.modules || [];
+        });
+        setLocalPerms(map);
+      }, [permissions]);
 
-function showApp(){
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('app').classList.add('active');
-  var av=CU.name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-  document.getElementById('sbAvatar').textContent=av;
-  document.getElementById('sbName').textContent=CU.name;
-  document.getElementById('sbRole').textContent=CU.role;
-  document.getElementById('nav-employees').style.display=CU.role==='admin'?'flex':'none';
-  updateBadges();navigate('dashboard');
-}
+      const handleTogglePerm = (role, moduleKey) => {
+        const current = localPerms[role] || [];
+        const updated = current.includes(moduleKey)
+          ? current.filter(m => m !== moduleKey)
+          : [...current, moduleKey];
+        
+        const newMap = { ...localPerms, [role]: updated };
+        setLocalPerms(newMap);
+        onUpdatePermissions(role, updated);
+      };
 
-var TITLES={dashboard:{t:'Dashboard',s:''},demands:{t:'Demands',s:'Manage client demands'},tasks:{t:'Tasks',s:'Track & assign work'},employees:{t:'Employees',s:'Team management'}};
+      const handleBulkImport = async () => {
+        if (!importFile) return;
+        setImporting(true);
+        setImportResult(null);
+        try {
+          const result = await onBulkImport(importFile);
+          setImportResult(result);
+          setImportFile(null);
+        } catch (e) {
+          setImportResult({ success: false, message: e.message || "Bulk import failed" });
+        } finally {
+          setImporting(false);
+        }
+      };
 
-function navigate(pg){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  document.getElementById('page-'+pg).classList.add('active');
-  var ne=document.getElementById('nav-'+pg);if(ne)ne.classList.add('active');
-  var info=TITLES[pg];
-  document.getElementById('pgTitle').textContent=info.t;
-  document.getElementById('pgSub').textContent=pg==='dashboard'?'Welcome back, '+CU.name+'!':info.s;
-  var btn=document.getElementById('actionBtn');
-  if(pg==='demands'&&canCreate()){btn.style.display='inline-flex';btn.textContent='+ New Demand';}
-  else if(pg==='tasks'&&(CU.role==='admin'||CU.role==='manager')){btn.style.display='inline-flex';btn.textContent='+ New Task';}
-  else if(pg==='employees'&&CU.role==='admin'){btn.style.display='inline-flex';btn.textContent='+ Add Employee';}
-  else btn.style.display='none';
-  if(pg==='dashboard')renderDash();
-  if(pg==='demands')renderDemands();
-  if(pg==='tasks')renderTasks();
-  if(pg==='employees')renderEmployees();
-}
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!form.name || !form.email) return;
+        onAddEmployee(form);
+        setForm({ name: "", role: "Support Engineer", dept: "IT Support", email: "", phone: "", password: "password123" });
+        setShowForm(false);
+      };
 
-function topbarAction(){
-  var a=document.querySelector('.page.active').id;
-  if(a==='page-demands')openDM();
-  if(a==='page-tasks')openTM();
-  if(a==='page-employees')openEM();
-}
-function canCreate(){return CU.role==='admin'||CU.role==='manager';}
-function updateBadges(){
-  var mt=CU.role==='employee'?DB.tasks.filter(function(t){return t.to===CU.id&&t.status!=='Done';}).length:DB.tasks.filter(function(t){return t.status!=='Done';}).length;
-  document.getElementById('tBadge').textContent=mt;
-  document.getElementById('dBadge').textContent=DB.demands.filter(function(d){return d.status==='Pending'||d.status==='In Progress';}).length;
-}
+      return (
+        <div className="fade-in">
+          <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
+            <StatCard label="Total employees" value={employees.length} icon={Icons.Users} tone={COLORS.accent} />
+            <StatCard label="Admin accounts" value={employees.filter(e => e.role === "Admin").length} icon={Icons.ShieldCheck} tone={COLORS.navy} />
+            <StatCard label="Active sessions" value={employees.filter(e => e.status === "online").length} icon={Icons.TrendingUp} tone={COLORS.green} />
+          </div>
 
-function renderDash(){
-  var td=DB.demands.length,od=DB.demands.filter(function(d){return d.status!=='Done'&&d.status!=='Cancelled';}).length;
-  var tt=DB.tasks.length,ot=DB.tasks.filter(function(t){return t.status!=='Done';}).length;
-  var myT=DB.tasks.filter(function(t){return t.to===CU.id;});
-  var stats=CU.role==='employee'?[
-    {l:'My Tasks',v:myT.length,i:'&#9989;',c:'var(--primary)'},
-    {l:'Pending',v:myT.filter(function(t){return t.status==='Pending';}).length,i:'&#9203;',c:'var(--warning)'},
-    {l:'In Progress',v:myT.filter(function(t){return t.status==='In Progress';}).length,i:'&#128260;',c:'var(--accent)'},
-    {l:'Completed',v:myT.filter(function(t){return t.status==='Done';}).length,i:'&#127942;',c:'var(--success)'}
-  ]:[
-    {l:'Total Demands',v:td,i:'&#128203;',c:'var(--primary)'},
-    {l:'Open Demands',v:od,i:'&#128194;',c:'var(--warning)'},
-    {l:'Total Tasks',v:tt,i:'&#9989;',c:'var(--accent)'},
-    {l:'Open Tasks',v:ot,i:'&#9203;',c:'var(--accent2)'},
-    {l:'Team Members',v:DB.users.length,i:'&#128101;',c:'var(--success)'}
-  ];
-  document.getElementById('statsGrid').innerHTML=stats.map(function(s){return '<div class="stat-card" style="--c:'+s.c+'"><div class="stat-icon">'+s.i+'</div><div class="stat-value">'+s.v+'</div><div class="stat-label">'+s.l+'</div></div>';}).join('');
-  var ss=['Pending','In Progress','Done','Cancelled'],sc=['var(--warning)','var(--accent)','var(--success)','#f87171'];
-  var mx=Math.max.apply(null,ss.map(function(s){return DB.demands.filter(function(d){return d.status===s;}).length;}).concat([1]));
-  document.getElementById('demandChart').innerHTML=ss.map(function(s,i){var c=DB.demands.filter(function(d){return d.status===s;}).length;return '<div class="chart-row"><span class="chart-lbl">'+s+'</span><div class="chart-track"><div class="chart-fill" style="width:'+(c/mx*100)+'%;background:'+sc[i]+'"></div></div><span class="chart-val">'+c+'</span></div>';}).join('');
-  var pp=['High','Medium','Low'],pc=['#f87171','var(--warning)','var(--success)'];
-  var pm=Math.max.apply(null,pp.map(function(p){return DB.tasks.filter(function(t){return t.priority===p;}).length;}).concat([1]));
-  document.getElementById('taskChart').innerHTML=pp.map(function(p,i){var c=DB.tasks.filter(function(t){return t.priority===p;}).length;return '<div class="chart-row"><span class="chart-lbl">'+p+'</span><div class="chart-track"><div class="chart-fill" style="width:'+(c/pm*100)+'%;background:'+pc[i]+'"></div></div><span class="chart-val">'+c+'</span></div>';}).join('');
-  document.getElementById('actList').innerHTML=DB.activity.slice(0,6).map(function(a){return '<div class="act-item"><div class="act-dot" style="background:'+a.color+'"></div><div><div class="act-text">'+a.text+'</div><div class="act-time">'+ago(a.time)+'</div></div></div>';}).join('')||'<p style="color:var(--text3);font-size:13px">No activity yet</p>';
-  var qa=document.getElementById('quickActs');qa.innerHTML='';
-  if(canCreate()){qa.innerHTML+='<button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigate(\'demands\');openDM()">&#128203; Create New Demand</button>';qa.innerHTML+='<button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigate(\'tasks\');openTM()">&#9989; Assign New Task</button>';}
-  if(CU.role==='admin'){qa.innerHTML+='<button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigate(\'employees\');openEM()">&#128101; Add Employee</button>';}
-  qa.innerHTML+='<button class="btn btn-secondary" style="justify-content:flex-start" onclick="navigate(\'tasks\')">&#128202; My Tasks</button>';
-}
+          {/* Role Permissions Matrix Section */}
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 22, marginBottom: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Icons.Key size={18} color={COLORS.purple} /> Role-Based Module Permissions Matrix (RBAC)
+                </div>
+                <div style={{ fontSize: 12.5, color: COLORS.sub }}>Admins can configure which roles have access to each specific application module in SQL.</div>
+              </div>
+            </div>
 
-function sk(s){return {Pending:'pending','In Progress':'progress',Done:'done',Cancelled:'cancelled'}[s]||'pending';}
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: COLORS.paper, textAlign: "left" }}>
+                    <th style={{ padding: "10px 14px", color: COLORS.ink, fontWeight: 700 }}>Role</th>
+                    {allModules.map(m => (
+                      <th key={m.key} style={{ padding: "10px 14px", color: COLORS.sub, fontWeight: 600, textAlign: "center" }}>
+                        {m.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {roles.map(r => {
+                    const roleMods = localPerms[r] || [];
+                    const isAdmin = r === "Admin";
+                    return (
+                      <tr key={r} style={{ borderTop: `1px solid ${COLORS.line}` }}>
+                        <td style={{ padding: "12px 14px", fontWeight: 600, color: COLORS.ink }}>
+                          {r} {isAdmin && <span style={{ fontSize: 11, background: COLORS.purpleSoft, color: COLORS.purple, padding: "2px 6px", borderRadius: 4, marginLeft: 6 }}>Full Control</span>}
+                        </td>
+                        {allModules.map(m => {
+                          const hasAccess = roleMods.includes(m.key) || (isAdmin && m.key !== "custom");
+                          return (
+                            <td key={m.key} style={{ padding: "12px 14px", textAlign: "center" }}>
+                              <input
+                                type="checkbox"
+                                disabled={isAdmin}
+                                checked={hasAccess}
+                                onChange={() => handleTogglePerm(r, m.key)}
+                                style={{ width: 17, height: 17, cursor: isAdmin ? "not-allowed" : "pointer", accentColor: COLORS.accent }}
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-function renderDemands(){
-  var list=DB.demands.slice(),q=document.getElementById('dSearch').value.toLowerCase(),sf=document.getElementById('dStatusF').value,pf=document.getElementById('dPriF').value;
-  if(CU.role==='employee')list=list.filter(function(d){return d.assignedTo===CU.id||d.by===CU.id;});
-  if(q)list=list.filter(function(d){return d.title.toLowerCase().includes(q)||d.client.toLowerCase().includes(q);});
-  if(sf)list=list.filter(function(d){return d.status===sf;});
-  if(pf)list=list.filter(function(d){return d.priority===pf;});
-  var tb=document.getElementById('dTable');
-  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty-cell"><span class="empty-icon">&#128203;</span>No demands found</td></tr>';return;}
-  tb.innerHTML=list.map(function(d){
-    var docs=(d.documents||[]).length,canEdit=CU.role==='admin'||(CU.role==='manager'&&d.by===CU.id);
-    return '<tr><td><div style="font-weight:600;cursor:pointer;color:var(--primary-light)" onclick="showDetail(\''+d.id+'\')">'+d.title+'</div><div class="tag">'+d.description.slice(0,50)+'</div></td><td>'+d.client+'</td><td>'+(ass?'<div class="av-chip"><div class="av-mini">'+ass.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2)+'</div><span style="font-size:13px">'+ass.name+'</span></div>':'<span style="color:var(--text3)">Unassigned</span>')+'</td><td><span class="badge b-'+d.priority.toLowerCase()+'">'+d.priority+'</span></td><td><span class="badge b-'+sk(d.status)+'">'+d.status+'</span></td><td>'+(docs?'<span class="doc-chip" onclick="showDetail(\''+d.id+'\')">&#128206; '+docs+' file'+(docs>1?'s':'')+'</span>':'<span style="color:var(--text3);font-size:12px">None</span>')+'</td><td style="color:var(--text3);font-size:13px">'+fmtD(d.at)+'</td><td><div class="actions"><button class="btn-icon" onclick="showDetail(\''+d.id+'\')">&#128065;</button>'+(canEdit?'<button class="btn-icon" onclick="editD(\''+d.id+'\')">&#9998;</button>':'')+(CU.role==='admin'?'<button class="btn-icon" onclick="delD(\''+d.id+'\')">&#128465;</button>':'')+'</div></td></tr>';
-  }).join('');
-}
+          {/* Manage Employees Section */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink }}>Manage Employees (SQL Database)</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="btn-action" onClick={() => { setShowImport(true); setImportResult(null); }} style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.accent, color: "#fff",
+                border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+              }}>
+                Bulk Import CSV / Excel
+              </button>
+              <a href="/api/employees/import-template" style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.paper, color: COLORS.ink,
+                border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, textDecoration: "none"
+              }}>
+                Download Template
+              </a>
+              <button className="btn-action" onClick={() => setShowForm(!showForm)} style={{
+                display: "flex", alignItems: "center", gap: 6, background: COLORS.navy, color: "#fff",
+                border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+              }}>
+                <Icons.Plus size={16} /> Add new employee
+              </button>
+            </div>
+          </div>
 
-function openDM(d){
-  pFiles=[];eFiles=[];
-  d=d||null;
-  document.getElementById('dId').value=d?d.id:'';
-  document.getElementById('dTitle').value=d?d.title:'';
-  document.getElementById('dClient').value=d?d.client:'';
-  var da=document.getElementById('dAssignee');
-  var demps=DB.users.filter(function(u){return u.role==='employee'||u.role==='manager';});
-  da.innerHTML='<option value="">Select Employee (optional)</option>'+demps.map(function(u){return '<option value="'+u.id+'"'+(d&&d.assignedTo===u.id?' selected':'')+'>'+u.name+' ('+u.role+')</option>';}).join('');
-  document.getElementById('dDesc').value=d?d.description:'';
-  document.getElementById('dPri').value=d?d.priority:'Medium';
-  document.getElementById('dStatus').value=d?d.status:'Pending';
-  document.getElementById('dMTitle').textContent=d?'Edit Demand':'Create Demand';
-  if(d&&d.documents)eFiles=d.documents.slice();
-  renderFL();document.getElementById('demandModal').classList.add('open');
-}
-function editD(id){var d=DB.demands.find(function(x){return x.id===id;});if(d)openDM(d);}
-function closeDM(){document.getElementById('demandModal').classList.remove('open');pFiles=[];eFiles=[];}
+          {showImport && (
+            <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: COLORS.ink, fontSize: 15 }}>Bulk Employee Import</div>
+                  <div style={{ color: COLORS.sub, fontSize: 12.5, marginTop: 4 }}>Upload CSV or Excel (.xlsx). Employee ID is optional; missing IDs are generated automatically.</div>
+                </div>
+                <button onClick={() => { setShowImport(false); setImportFile(null); setImportResult(null); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: COLORS.sub }}><Icons.X size={18} /></button>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <input type="file" accept=".csv,.xlsx" onChange={e => { setImportFile(e.target.files?.[0] || null); setImportResult(null); }} style={{ fontSize: 13 }} />
+                <button onClick={handleBulkImport} disabled={!importFile || importing} style={{ background: importing ? "#94A3B8" : COLORS.accent, color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13.5, fontWeight: 600, cursor: importFile && !importing ? "pointer" : "not-allowed" }}>
+                  {importing ? "Importing..." : "Import Employees"}
+                </button>
+              </div>
+              <div style={{ marginTop: 12, fontSize: 12, color: COLORS.sub }}>
+                Columns: <b>employee_id</b> (optional), <b>name</b>, <b>email</b>, <b>phone</b> (optional), <b>department</b>, <b>role</b>, <b>password</b> (optional).
+              </div>
+              {importResult && (
+                <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: importResult.success ? COLORS.greenSoft : COLORS.redSoft, color: importResult.success ? COLORS.green : COLORS.red, fontSize: 12.5 }}>
+                  <div style={{ fontWeight: 700 }}>{importResult.message}</div>
+                  {importResult.success && <div style={{ marginTop: 5 }}>Imported: {importResult.imported} · Skipped: {importResult.skipped}</div>}
+                  {importResult.errors?.length > 0 && (
+                    <div style={{ marginTop: 8, color: COLORS.ink }}>
+                      {importResult.errors.slice(0, 8).map(err => <div key={err.row}>Row {err.row}: {err.errors.join(", ")}</div>)}
+                      {importResult.errors.length > 8 && <div>…and {importResult.errors.length - 8} more row(s).</div>}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
-function saveDemand(){
-  var title=document.getElementById('dTitle').value.trim(),client=document.getElementById('dClient').value.trim();
-  if(!title||!client){toast('Title and Client are required','warning');return;}
-  var id=document.getElementById('dId').value,docs=eFiles.concat(pFiles);
-  if(id){
-    var idx=DB.demands.findIndex(function(d){return d.id===id;});
-    DB.demands[idx]=Object.assign({},DB.demands[idx],{title:title,client:client,description:document.getElementById('dDesc').value,priority:document.getElementById('dPri').value,status:document.getElementById('dStatus').value,assignedTo:document.getElementById('dAssignee').value,documents:docs});
-    addAct(CU.name+' updated demand "'+title+'"','var(--accent)');toast('Demand updated!');
-  }else{
-    DB.demands.unshift({id:uid(),title:title,client:client,description:document.getElementById('dDesc').value,priority:document.getElementById('dPri').value,status:'Pending',assignedTo:document.getElementById('dAssignee').value,by:CU.id,at:new Date().toISOString(),documents:docs});
-    addAct(CU.name+' created demand "'+title+'"','var(--primary)');toast('Demand created!');
-  }
-  save();updateBadges();closeDM();renderDemands();
-}
+          {showForm && (
+            <form onSubmit={handleSubmit} style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20, marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input placeholder="Full Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                style={{ flex: 1, minWidth: 150, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <input placeholder="Email Address" required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                style={{ flex: 1, minWidth: 170, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <input placeholder="Mobile Number (+91 98765 00000)" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                style={{ flex: 1, minWidth: 160, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <input placeholder="Password (default: password123)" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
+                style={{ flex: 1, minWidth: 150, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
+                style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                {roles.map(r => <option key={r}>{r}</option>)}
+              </select>
+              <select value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })}
+                style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                {depts.map(d => <option key={d}>{d}</option>)}
+              </select>
+              <button type="submit" className="btn-action" style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>Save & Generate ID</button>
+            </form>
+          )}
 
-function delD(id){
-  var d=DB.demands.find(function(x){return x.id===id;});if(!d)return;
-  if(!confirm('Delete "'+d.title+'"? Linked tasks will also be removed.'))return;
-  DB.demands=DB.demands.filter(function(x){return x.id!==id;});
-  DB.tasks=DB.tasks.filter(function(t){return t.did!==id;});
-  save();updateBadges();renderDemands();toast('Demand deleted','danger');
-}
+          <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+              <thead>
+                <tr style={{ background: COLORS.paper, textAlign: "left" }}>
+                  {["Employee ID", "Name", "Role", "Department", "Email", "Mobile (2FA)", "Allowed Modules", "Actions"].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", color: COLORS.sub, fontWeight: 600, fontSize: 12 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map(e => (
+                  <tr key={e.id} style={{ borderTop: `1px solid ${COLORS.line}` }}>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub, fontWeight: 700 }}>
+                      <span style={{ background: "#EEF2F6", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}>{e.id}</span>
+                    </td>
+                    <td style={{ padding: "14px 16px", color: COLORS.ink, fontWeight: 600 }}>{e.name}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.role}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.dept}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub }}>{e.email}</td>
+                    <td style={{ padding: "14px 16px", color: COLORS.sub, fontSize: 13, fontFamily: "monospace" }}>{e.phone || "—"}</td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {(e.permissions || []).map(m => (
+                          <span key={m} style={{ fontSize: 11, background: "#F1F5F9", color: "#475569", padding: "2px 6px", borderRadius: 4, textTransform: "capitalize" }}>{m}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      <button
+                        onClick={() => setResetModal({ open: true, emp: e, newPassword: "password123" })}
+                        title="Reset Employee Password (Admin Only)"
+                        className="btn-action"
+                        style={{
+                          border: `1px solid #DDD6FE`, background: "#F5F3FF", color: COLORS.purple,
+                          borderRadius: 7, padding: "5px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                          display: "inline-flex", alignItems: "center", gap: 4, marginRight: 8
+                        }}
+                      >
+                        <Icons.Key size={13} color={COLORS.purple} /> Reset Password
+                      </button>
 
-function showDetail(id){
-  var d=DB.demands.find(function(x){return x.id===id;});if(!d)return;
-  var cr=DB.users.find(function(u){return u.id===d.by;}),lk=DB.tasks.filter(function(t){return t.did===id;});
-  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px"><h2 style="font-size:18px;font-weight:700">'+d.title+'</h2><button class="btn-icon" onclick="closeDetail()" style="font-size:22px">&times;</button></div>';
-  h+='<div class="info-row"><span class="info-lbl">Client</span><span>'+d.client+'</span></div>';
-  var da=DB.users.find(function(u){return u.id===d.assignedTo;});
-  h+='<div class="info-row"><span class="info-lbl">Assigned To</span><span>'+(da?da.name:'Unassigned')+'</span></div>';
-  h+='<div class="info-row"><span class="info-lbl">Priority</span><span class="badge b-'+d.priority.toLowerCase()+'">'+d.priority+'</span></div>';
-  h+='<div class="info-row"><span class="info-lbl">Status</span><span class="badge b-'+sk(d.status)+'">'+d.status+'</span></div>';
-  h+='<div class="info-row"><span class="info-lbl">Created by</span><span>'+(cr?cr.name:'Unknown')+'</span></div>';
-  h+='<div class="info-row"><span class="info-lbl">Date</span><span>'+fmtD(d.at)+'</span></div>';
-  h+='<div class="divider"></div><p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px">'+(d.description||'No description.')+'</p>';
-  h+='<div class="divider"></div><div style="font-size:13px;font-weight:600;margin-bottom:10px">&#128206; Documents ('+(d.documents||[]).length+')</div><div class="flex-gap" style="margin-bottom:16px">';
-  h+=(d.documents||[]).length?d.documents.map(function(f){return '<span class="doc-chip" onclick="dlFile(\''+encodeURIComponent(f.name)+'\',\''+f.data+'\')">&#128196; '+f.name+'</span>';}).join(''):'<span style="color:var(--text3);font-size:13px">No documents</span>';
-  h+='</div><div class="divider"></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:13px;font-weight:600">&#9989; Linked Tasks ('+lk.length+')</div>'+(canCreate()?'<button class="btn btn-secondary btn-sm" onclick="closeDetail();openTMForDemand(\''+d.id+'\')">+ Create Task</button>':'')+'</div>';
-  h+=lk.length?lk.map(function(t){var e=DB.users.find(function(u){return u.id===t.to;});return '<div style="padding:10px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px"><div style="font-weight:600;font-size:13px">'+t.title+'</div><div style="font-size:12px;color:var(--text3);margin-top:4px">Assigned: '+(e?e.name:'Unassigned')+' &bull; <span class="badge b-'+sk(t.status)+'" style="font-size:10px">'+t.status+'</span></div></div>';}).join(''):'<p style="color:var(--text3);font-size:13px">No tasks linked</p>';
-  document.getElementById('detailPanel').innerHTML=h;
-  document.getElementById('detailOv').classList.add('open');
-  document.getElementById('detailPanel').classList.add('open');
-}
-function closeDetail(){document.getElementById('detailPanel').classList.remove('open');document.getElementById('detailOv').classList.remove('open');}
+                      <button onClick={() => onDeleteEmployee(e.id)} title="Remove employee from SQL" style={{ border: "none", background: "none", cursor: "pointer", color: COLORS.red, padding: 4 }}>
+                        <Icons.X size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-function handleFiles(files){
-  Array.from(files).forEach(function(f){
-    var r=new FileReader();r.onload=function(e){pFiles.push({name:f.name,type:f.type,size:f.size,data:e.target.result});renderFL();};r.readAsDataURL(f);
-  });document.getElementById('fileIn').value='';
-}
-function fDragOver(e){e.preventDefault();document.getElementById('fileZone').classList.add('drag');}
-function fDragLeave(){document.getElementById('fileZone').classList.remove('drag');}
-function fDrop(e){e.preventDefault();document.getElementById('fileZone').classList.remove('drag');handleFiles(e.dataTransfer.files);}
-function renderFL(){
-  var all=eFiles.concat(pFiles);
-  document.getElementById('fileList').innerHTML=all.map(function(f,i){
-    var ex=i<eFiles.length;
-    return '<div class="file-item"><span>'+fIcon(f.type)+'</span><span class="file-name">'+f.name+'</span><span class="file-size">'+(ex?'saved':fmtSz(f.size))+'</span><button class="file-rm" onclick="rmFile('+i+','+ex+')">&#10005;</button></div>';
-  }).join('');
-}
-function rmFile(i,ex){if(ex)eFiles.splice(i,1);else pFiles.splice(i-eFiles.length,1);renderFL();}
-function dlFile(name,data){var a=document.createElement('a');a.href=data;a.download=decodeURIComponent(name);a.click();}
-function fIcon(t){if(!t)return '&#128196;';if(t.startsWith('image'))return '&#128444;';if(t.includes('pdf'))return '&#128213;';if(t.includes('word'))return '&#128214;';if(t.includes('excel')||t.includes('sheet'))return '&#128200;';return '&#128196;';}
+          {/* Reset Password Modal (Admin Only) */}
+          {resetModal.open && (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.55)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20
+            }}>
+              <div className="fade-in" style={{
+                background: "#fff", borderRadius: 16, padding: "28px", width: "100%", maxWidth: 430,
+                boxShadow: "0 20px 40px rgba(0,0,0,0.25)"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: COLORS.ink, display: "flex", alignItems: "center", gap: 8 }}>
+                    <Icons.Key size={18} color={COLORS.purple} /> Reset Employee Password
+                  </div>
+                  <button onClick={() => setResetModal({ open: false, emp: null, newPassword: "" })} style={{ border: "none", background: "none", cursor: "pointer", color: COLORS.sub }}>
+                    <Icons.X size={18} />
+                  </button>
+                </div>
 
-function renderTasks(){
-  var list=DB.tasks.slice();
-  if(CU.role==='employee')list=list.filter(function(t){return t.to===CU.id;});
-  var q=document.getElementById('tSearch').value.toLowerCase(),sf=document.getElementById('tStatusF').value,pf=document.getElementById('tPriF').value;
-  if(q)list=list.filter(function(t){return t.title.toLowerCase().includes(q);});
-  if(sf)list=list.filter(function(t){return t.status===sf;});
-  if(pf)list=list.filter(function(t){return t.priority===pf;});
-  var tb=document.getElementById('tTable');
-  if(!list.length){tb.innerHTML='<tr><td colspan="7" class="empty-cell"><span class="empty-icon">&#9989;</span>No tasks found</td></tr>';return;}
-  tb.innerHTML=list.map(function(t){
-    var asgn=DB.users.find(function(u){return u.id===t.to;}),dem=DB.demands.find(function(d){return d.id===t.did;});
-    var ov=t.due&&new Date(t.due)<new Date()&&t.status!=='Done';
-    var sc=CU.role==='employee'?'<select class="flt-sel" style="padding:5px 10px;font-size:12px" onchange="qUpTask(\''+t.id+'\',this.value)"><option '+(t.status==='Pending'?'selected':'')+'>Pending</option><option '+(t.status==='In Progress'?'selected':'')+'>In Progress</option><option '+(t.status==='Done'?'selected':'')+'>Done</option></select>':'<span class="badge b-'+sk(t.status)+'">'+t.status+'</span>';
-    return '<tr><td><div style="font-weight:600">'+t.title+'</div><div class="tag">'+(t.desc?t.desc.slice(0,45):'')+'</div></td><td style="color:var(--text3);font-size:13px">'+(dem?dem.title:'None')+'</td><td>'+(asgn?'<div class="av-chip"><div class="av-mini">'+asgn.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2)+'</div><span style="font-size:13px">'+asgn.name+'</span></div>':'<span style="color:var(--text3)">Unassigned</span>')+'</td><td><span class="badge b-'+t.priority.toLowerCase()+'">'+t.priority+'</span></td><td>'+sc+'</td><td style="font-size:13px;color:'+(ov?'#f87171':'var(--text2)')+'">'+(t.due?(ov?'&#9888; ':'')+t.due:'None')+'</td><td><div class="actions">'+(CU.role!=='employee'?'<button class="btn-icon" onclick="editT(\''+t.id+'\')">&#9998;</button>':'')+(CU.role==='admin'?'<button class="btn-icon" onclick="delT(\''+t.id+'\')">&#128465;</button>':'')+'</div></td></tr>';
-  }).join('');
-}
+                <div style={{ background: COLORS.paper, padding: "12px 14px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
+                  <div><b>Employee:</b> {resetModal.emp?.name}</div>
+                  <div style={{ color: COLORS.sub, marginTop: 2 }}><b>Emp ID:</b> {resetModal.emp?.id} · <b>Role:</b> {resetModal.emp?.role}</div>
+                </div>
 
-function qUpTask(id,status){var t=DB.tasks.find(function(x){return x.id===id;});if(t){t.status=status;save();updateBadges();addAct(CU.name+' updated "'+t.title+'" to '+status,'var(--accent)');}}
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!resetModal.newPassword) return;
+                  onResetPassword(resetModal.emp.id, resetModal.newPassword);
+                  setResetModal({ open: false, emp: null, newPassword: "" });
+                }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.ink, marginBottom: 6 }}>
+                      Set New Password
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter new password"
+                      value={resetModal.newPassword}
+                      onChange={e => setResetModal({ ...resetModal, newPassword: e.target.value })}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 14, outline: "none" }}
+                    />
+                  </div>
 
-function openTM(t){
-  t=t||null;
-  document.getElementById('tId').value=t?t.id:'';
-  document.getElementById('tTitle').value=t?t.title:'';
-  document.getElementById('tDesc').value=t?t.desc:'';
-  document.getElementById('tPri').value=t?t.priority:'Medium';
-  document.getElementById('tStatus').value=t?t.status:'Pending';
-  document.getElementById('tDue').value=t?t.due||'':'';
-  document.getElementById('tMTitle').textContent=t?'Edit Task':'Create Task';
-  var dd=document.getElementById('tDemand');
-  dd.innerHTML='<option value="">None</option>'+DB.demands.map(function(d){return '<option value="'+d.id+'"'+(t&&t.did===d.id?' selected':'')+'>'+d.title+'</option>';}).join('');
-  var ad=document.getElementById('tAssignee');
-  var emps=DB.users.filter(function(u){return u.role==='employee'||u.role==='manager';});
-  ad.innerHTML='<option value="">Select Employee</option>'+emps.map(function(u){return '<option value="'+u.id+'"'+(t&&t.to===u.id?' selected':'')+'>'+u.name+' ('+u.role+')</option>';}).join('');
-  document.getElementById('taskModal').classList.add('open');
-}
-function editT(id){var t=DB.tasks.find(function(x){return x.id===id;});if(t)openTM(t);}
-function openTMForDemand(did){openTM(null);document.getElementById('tDemand').value=did;var d=DB.demands.find(function(x){return x.id===did;});if(d&&d.assignedTo){document.getElementById('tAssignee').value=d.assignedTo;}}
-function closeTM(){document.getElementById('taskModal').classList.remove('open');}
+                  <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+                    <button type="button" onClick={() => setResetModal({ ...resetModal, newPassword: "password123" })} style={{ padding: "4px 8px", fontSize: 11.5, borderRadius: 4, border: `1px solid ${COLORS.line}`, background: "#fff", cursor: "pointer" }}>Set: password123</button>
+                    <button type="button" onClick={() => setResetModal({ ...resetModal, newPassword: "Welcome@" + Math.floor(1000 + Math.random() * 9000) })} style={{ padding: "4px 8px", fontSize: 11.5, borderRadius: 4, border: `1px solid ${COLORS.line}`, background: "#fff", cursor: "pointer" }}>Generate Random</button>
+                  </div>
 
-function saveTask(){
-  var title=document.getElementById('tTitle').value.trim(),asgn=document.getElementById('tAssignee').value;
-  if(!title){toast('Task title is required','warning');return;}
-  if(!asgn){toast('Please assign to an employee','warning');return;}
-  var id=document.getElementById('tId').value,aName=DB.users.find(function(u){return u.id===asgn;})||{name:''};
-  if(id){
-    var idx=DB.tasks.findIndex(function(t){return t.id===id;});
-    DB.tasks[idx]=Object.assign({},DB.tasks[idx],{title:title,to:asgn,desc:document.getElementById('tDesc').value,did:document.getElementById('tDemand').value,priority:document.getElementById('tPri').value,status:document.getElementById('tStatus').value,due:document.getElementById('tDue').value});
-    addAct(CU.name+' updated task "'+title+'"','var(--accent)');toast('Task updated!');
-  }else{
-    DB.tasks.unshift({id:uid(),title:title,to:asgn,desc:document.getElementById('tDesc').value,did:document.getElementById('tDemand').value,priority:document.getElementById('tPri').value,status:'Pending',due:document.getElementById('tDue').value,by:CU.id,at:new Date().toISOString()});
-    addAct(CU.name+' assigned "'+title+'" to '+aName.name,'var(--success)');toast('Task assigned to '+aName.name+'!');
-  }
-  save();updateBadges();closeTM();renderTasks();
-}
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                    <button type="button" onClick={() => setResetModal({ open: false, emp: null, newPassword: "" })} style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Cancel</button>
+                    <button type="submit" className="btn-action" style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: COLORS.purple, color: "#fff", cursor: "pointer", fontSize: 13.5, fontWeight: 700 }}>Save New Password</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
 
-function delT(id){var t=DB.tasks.find(function(x){return x.id===id;});if(!t||!confirm('Delete "'+t.title+'"?'))return;DB.tasks=DB.tasks.filter(function(x){return x.id!==id;});save();updateBadges();renderTasks();toast('Task deleted','danger');}
+    /* ---------------------------------- OFFER LETTER ---------------------------------- */
+    function OfferLetter({ offers, onAddOffer, onAdvanceOffer, onDeleteOffer, searchQuery }) {
+      const [showForm, setShowForm] = useState(false);
+      const [form, setForm] = useState({ candidate: "", role: "", dept: "Engineering" });
 
-function renderEmployees(){
-  var list=DB.users.slice(),q=document.getElementById('eSearch').value.toLowerCase(),rf=document.getElementById('eRoleF').value;
-  if(q)list=list.filter(function(u){return u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q);});
-  if(rf)list=list.filter(function(u){return u.role===rf;});
-  var tb=document.getElementById('eTable');
-  if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty-cell"><span class="empty-icon">&#128101;</span>No employees found</td></tr>';return;}
-  tb.innerHTML=list.map(function(u){
-    var ini=u.name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-    return '<tr><td><div class="av-chip"><div class="av-mini">'+ini+'</div><span style="font-size:14px;font-weight:500">'+u.name+'</span></div></td><td style="color:var(--text2);font-size:13px">'+u.email+'</td><td style="color:var(--text3);font-size:13px">'+(u.department||'None')+'</td><td style="color:var(--text3);font-size:13px">'+(u.position||'None')+'</td><td><span class="badge b-'+u.role+'">'+u.role+'</span></td><td><div class="actions"><button class="btn-icon" onclick="editE(\''+u.id+'\')">&#9998;</button>'+(u.id!==CU.id?'<button class="btn-icon" onclick="delE(\''+u.id+'\')">&#128465;</button>':'')+'</div></td></tr>';
-  }).join('');
-}
+      const filtered = offers.filter(o => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return o.candidate.toLowerCase().includes(q) || o.role.toLowerCase().includes(q) || o.dept.toLowerCase().includes(q) || o.id.toLowerCase().includes(q);
+      });
 
-function openEM(u){
-  u=u||null;
-  document.getElementById('eId').value=u?u.id:'';
-  document.getElementById('eName').value=u?u.name:'';
-  document.getElementById('eEmail').value=u?u.email:'';
-  document.getElementById('eDept').value=u?u.department||'':'';
-  document.getElementById('ePos').value=u?u.position||'':'';
-  document.getElementById('eRole').value=u?u.role:'employee';
-  document.getElementById('ePwd').value='';
-  document.getElementById('eMTitle').textContent=u?'Edit Employee':'Add Employee';
-  document.getElementById('empModal').classList.add('open');
-}
-function editE(id){var u=DB.users.find(function(x){return x.id===id;});if(u)openEM(u);}
-function closeEM(){document.getElementById('empModal').classList.remove('open');}
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!form.candidate || !form.role) return;
+        onAddOffer(form);
+        setForm({ candidate: "", role: "", dept: "Engineering" });
+        setShowForm(false);
+      };
 
-function saveEmp(){
-  var name=document.getElementById('eName').value.trim(),email=document.getElementById('eEmail').value.trim(),pw=document.getElementById('ePwd').value;
-  if(!name||!email){toast('Name and email required','warning');return;}
-  var id=document.getElementById('eId').value;
-  if(id){
-    var idx=DB.users.findIndex(function(u){return u.id===id;});
-    DB.users[idx]=Object.assign({},DB.users[idx],{name:name,email:email,department:document.getElementById('eDept').value,position:document.getElementById('ePos').value,role:document.getElementById('eRole').value},pw?{password:pw}:{});
-    if(id===CU.id){CU=DB.users[idx];document.getElementById('sbName').textContent=CU.name;}
-    addAct('Admin updated employee: '+name,'var(--accent)');toast('Employee updated!');
-  }else{
-    if(!pw){toast('Password required for new employees','warning');return;}
-    if(DB.users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();})){toast('Email already exists','warning');return;}
-    DB.users.push({id:uid(),name:name,email:email,password:pw,department:document.getElementById('eDept').value,position:document.getElementById('ePos').value,role:document.getElementById('eRole').value});
-    addAct('Admin added employee: '+name,'var(--primary)');toast('Employee added!');
-  }
-  save();renderEmployees();closeEM();
-}
+      return (
+        <div className="fade-in">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink }}>Candidate offer letters (SQL Table: offers)</div>
+            <button className="btn-action" onClick={() => setShowForm(!showForm)} style={{
+              display: "flex", alignItems: "center", gap: 6, background: COLORS.accent, color: "#fff",
+              border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer"
+            }}>
+              <Icons.Plus size={16} /> New offer draft
+            </button>
+          </div>
 
-function delE(id){
-  var u=DB.users.find(function(x){return x.id===id;});
-  if(!u||!confirm('Remove "'+u.name+'"?'))return;
-  DB.users=DB.users.filter(function(x){return x.id!==id;});
-  DB.tasks=DB.tasks.map(function(t){return t.to===id?Object.assign({},t,{to:''}):t;});
-  save();renderEmployees();updateBadges();toast('Employee removed','danger');
-}
+          {showForm && (
+            <form onSubmit={handleSubmit} style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 18, marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input placeholder="Candidate full name" required value={form.candidate} onChange={e => setForm({ ...form, candidate: e.target.value })}
+                style={{ flex: 1, minWidth: 180, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <input placeholder="Target Role" required value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
+                style={{ flex: 1, minWidth: 160, padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+              <select value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })}
+                style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                {["Engineering", "Quality", "IT Support", "Human Resources", "Operations"].map(d => <option key={d}>{d}</option>)}
+              </select>
+              <button type="submit" className="btn-action" style={{ background: COLORS.navy, color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>Create draft in SQL</button>
+            </form>
+          )}
 
-function addAct(text,color){DB.activity.unshift({text:text,color:color,time:new Date().toISOString()});if(DB.activity.length>20)DB.activity.pop();}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {filtered.map(o => {
+              const s = statusStyle(o.status);
+              return (
+                <div key={o.id} className="hover-lift" style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, background: COLORS.accentSoft,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <Icons.FileSignature size={18} color={COLORS.accent} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: COLORS.ink, fontSize: 14.5 }}>{o.candidate}</div>
+                    <div style={{ fontSize: 12.5, color: COLORS.sub }}>{o.role} · {o.dept} · {o.id}</div>
+                  </div>
+                  <div style={{ fontSize: 12.5, color: COLORS.sub }}>{o.date}</div>
+                  <Pill bg={s.bg} fg={s.fg}>{o.status}</Pill>
+                  {["Draft", "Sent"].includes(o.status) && (
+                    <button className="btn-action" onClick={() => onAdvanceOffer(o.id)} style={{
+                      border: `1px solid ${COLORS.line}`, background: "#fff", borderRadius: 8,
+                      padding: "7px 12px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", color: COLORS.ink,
+                      display: "flex", alignItems: "center", gap: 4
+                    }}>
+                      {o.status === "Draft" ? "Send Offer" : "Mark Accepted"} <Icons.ChevronRight size={14} />
+                    </button>
+                  )}
+                  <button onClick={() => onDeleteOffer(o.id)} title="Delete offer" style={{ border: "none", background: "none", cursor: "pointer", color: COLORS.sub, padding: 4 }}>
+                    <Icons.X size={15} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
 
-function toast(msg,type){
-  var t=document.createElement('div');t.className='toast';
-  var bc={warning:'var(--warning)',danger:'#f87171',success:'var(--success)'};
-  t.style.borderLeftColor=bc[type]||'var(--primary)';
-  t.innerHTML='<span>'+msg+'</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>';
-  document.getElementById('toastCont').appendChild(t);
-  setTimeout(function(){t.style.opacity='0';},3000);setTimeout(function(){if(t.parentNode)t.remove();},3500);
-}
+    /* ---------------------------------- MAIN APP SHELL ---------------------------------- */
+    const ALL_NAV = [
+      { key: "dashboard", label: "Dashboard", icon: Icons.LayoutDashboard },
+      { key: "tracker", label: "Issue Tracker", icon: Icons.Ticket },
+      { key: "employee", label: "Employee", icon: Icons.Users },
+      { key: "admin", label: "Admin & Perms", icon: Icons.ShieldCheck },
+      { key: "offer", label: "Offer Letter", icon: Icons.FileSignature },
+    ];
 
-function fmtD(iso){if(!iso)return '';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-function ago(iso){var d=Date.now()-new Date(iso).getTime(),m=Math.floor(d/60000);if(m<1)return 'just now';if(m<60)return m+'m ago';var h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
-function fmtSz(b){if(!b)return '';if(b<1024)return b+'B';if(b<1048576)return (b/1024).toFixed(1)+'KB';return (b/1048576).toFixed(1)+'MB';}
+    function SupportHub() {
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem("supporthub_user");
+        return saved ? JSON.parse(saved) : null;
+      });
+      const [userPermissions, setUserPermissions] = useState(() => {
+        const saved = localStorage.getItem("supporthub_perms");
+        return saved ? JSON.parse(saved) : ["dashboard", "tracker", "employee", "admin", "offer"];
+      });
 
-loadDB();
-var sid=sessionStorage.getItem('dfcu');
-if(sid){var su=DB.users.find(function(x){return x.id===sid;});if(su){CU=su;showApp();}}
-</script>
+      const [tab, setTab] = useState("dashboard");
+      const [tickets, setTickets] = useState([]);
+      const [employees, setEmployees] = useState([]);
+      const [offers, setOffers] = useState([]);
+      const [activityLogs, setActivityLogs] = useState([]);
+      const [permissions, setPermissions] = useState([]);
+      const [stats, setStats] = useState(null);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [loading, setLoading] = useState(true);
+      const [dbConnected, setDbConnected] = useState(false);
+      const [toast, setToast] = useState(null);
+
+      const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3200);
+      };
+
+      // Filter navigation items by active user's permissions
+      const visibleNav = useMemo(() => {
+        if (!currentUser) return [];
+        return ALL_NAV.filter(item => userPermissions.includes(item.key));
+      }, [currentUser, userPermissions]);
+
+      // Ensure active tab is allowed
+      useEffect(() => {
+        if (visibleNav.length > 0 && !visibleNav.some(n => n.key === tab)) {
+          setTab(visibleNav[0].key);
+        }
+      }, [visibleNav, tab]);
+
+      const loadData = async () => {
+        try {
+          const [tRes, eRes, oRes, lRes, sRes, pRes] = await Promise.all([
+            fetch("/api/tickets").then(r => r.json()),
+            fetch("/api/employees").then(r => r.json()),
+            fetch("/api/offers").then(r => r.json()),
+            fetch("/api/activity-logs").then(r => r.json()),
+            fetch("/api/dashboard/stats").then(r => r.json()),
+            fetch("/api/permissions").then(r => r.json()),
+          ]);
+          setTickets(tRes || []);
+          setEmployees(eRes || []);
+          setOffers(oRes || []);
+          setActivityLogs(lRes || []);
+          setStats(sRes || null);
+          setPermissions(pRes || []);
+          setDbConnected(true);
+        } catch (err) {
+          console.error("Error fetching data from SQL backend:", err);
+          showToast("Failed to connect to SQL database backend", "error");
+          setDbConnected(false);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        loadData();
+      }, []);
+
+      const handleLoginSuccess = (data) => {
+        setCurrentUser(data.employee);
+        setUserPermissions(data.permissions);
+        localStorage.setItem("supporthub_user", JSON.stringify(data.employee));
+        localStorage.setItem("supporthub_perms", JSON.stringify(data.permissions));
+        showToast(`Welcome ${data.employee.name}! Logged in as ${data.employee.role}`);
+        loadData();
+      };
+
+      const handleLogout = async () => {
+        if (currentUser) {
+          try {
+            await fetch("/api/auth/logout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ emp_id: currentUser.id })
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setCurrentUser(null);
+        localStorage.removeItem("supporthub_user");
+        localStorage.removeItem("supporthub_perms");
+        showToast("Logged out successfully");
+      };
+
+      const handleUpdatePermissions = async (role, modules) => {
+        try {
+          const res = await fetch(`/api/permissions/${encodeURIComponent(role)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ modules })
+          });
+          if (!res.ok) throw new Error("Failed to update permissions in SQL");
+          showToast(`Updated permissions for role: ${role}`);
+          if (currentUser && currentUser.role === role) {
+            setUserPermissions(modules);
+            localStorage.setItem("supporthub_perms", JSON.stringify(modules));
+          }
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleAddTicket = async (ticketData) => {
+        try {
+          const res = await fetch("/api/tickets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ticketData),
+          });
+          if (!res.ok) throw new Error("Failed to create ticket");
+          const created = await res.json();
+          setTickets(prev => [created, ...prev]);
+          showToast(`Created ticket ${created.id} in SQL!`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleCycleTicketStatus = async (id) => {
+        try {
+          const res = await fetch(`/api/tickets/${id}/status`, { method: "PATCH" });
+          if (!res.ok) throw new Error("Failed to update status");
+          const updated = await res.json();
+          setTickets(prev => prev.map(t => t.id === id ? updated : t));
+          showToast(`Updated ${id} to ${updated.status}`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleDeleteTicket = async (id) => {
+        try {
+          const res = await fetch(`/api/tickets/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Failed to delete ticket");
+          setTickets(prev => prev.filter(t => t.id !== id));
+          showToast(`Deleted ticket ${id}`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleAddEmployee = async (empData) => {
+        try {
+          const res = await fetch("/api/employees", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(empData),
+          });
+          if (!res.ok) throw new Error("Failed to add employee");
+          const created = await res.json();
+          setEmployees(prev => [...prev, created]);
+          showToast(`Added ${created.name} (${created.id}) to employees table!`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleBulkImportEmployees = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/employees/bulk-import", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Bulk import failed");
+        setEmployees(prev => [...prev, ...(data.employees || [])]);
+        showToast(data.message || "Employees imported successfully");
+        await loadData();
+        return data;
+      };
+
+      const handleDeleteEmployee = async (id) => {
+        try {
+          const res = await fetch(`/api/employees/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Failed to delete employee");
+          setEmployees(prev => prev.filter(e => e.id !== id));
+          showToast(`Removed employee ${id} from SQL database`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleToggleEmployeeStatus = async (id) => {
+        try {
+          const res = await fetch(`/api/employees/${id}/toggle-status`, { method: "POST" });
+          if (!res.ok) throw new Error("Failed to toggle status");
+          const updated = await res.json();
+          setEmployees(prev => prev.map(e => e.id === id ? updated : e));
+          showToast(`${updated.name} is now ${updated.status}`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleAddOffer = async (offerData) => {
+        try {
+          const res = await fetch("/api/offers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(offerData),
+          });
+          if (!res.ok) throw new Error("Failed to create offer");
+          const created = await res.json();
+          setOffers(prev => [created, ...prev]);
+          showToast(`Created offer draft ${created.id} in SQL`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleAdvanceOffer = async (id) => {
+        try {
+          const res = await fetch(`/api/offers/${id}/advance`, { method: "PATCH" });
+          if (!res.ok) throw new Error("Failed to advance offer");
+          const updated = await res.json();
+          setOffers(prev => prev.map(o => o.id === id ? updated : o));
+          showToast(`Offer ${id} advanced to ${updated.status}`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleResetPassword = async (empId, newPassword) => {
+        try {
+          const res = await fetch(`/api/employees/${empId}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ new_password: newPassword, admin_id: currentUser.id })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to reset password");
+          showToast(`Password for employee ${empId} reset successfully!`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      const handleDeleteOffer = async (id) => {
+        try {
+          const res = await fetch(`/api/offers/${id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Failed to delete offer");
+          setOffers(prev => prev.filter(o => o.id !== id));
+          showToast(`Deleted offer ${id}`);
+          loadData();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      };
+
+      // If user is not logged in, show Login Screen
+      if (!currentUser) {
+        return (
+          <>
+            <LoginScreen onLoginSuccess={handleLoginSuccess} />
+            <Toast toast={toast} />
+          </>
+        );
+      }
+
+      const titleFor = tab === "dashboard" ? "Dashboard" : ALL_NAV.find(n => n.key === tab)?.label;
+
+      return (
+        <div style={{ display: "flex", minHeight: "100vh", background: COLORS.paper, fontFamily: "'Inter', sans-serif" }}>
+          {/* Sidebar */}
+          <div style={{ width: 236, background: COLORS.navyDeep, padding: "22px 14px", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px", marginBottom: 26 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#fff", fontSize: 15 }}>S</div>
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>SupportHub</div>
+                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
+                  <Icons.Circle size={6} fill={dbConnected ? "#10B981" : "#EF4444"} color="none" />
+                  {dbConnected ? "SQL Connected" : "Connecting..."}
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Tabs allowed by RBAC */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {visibleNav.map(n => {
+                const active = tab === n.key;
+                const Icon = n.icon;
+                return (
+                  <button key={n.key} onClick={() => setTab(n.key)} style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8,
+                    background: active ? "rgba(255,255,255,0.12)" : "transparent", border: "none", cursor: "pointer",
+                    color: active ? "#fff" : "rgba(255,255,255,0.65)", fontSize: 13.5, fontWeight: active ? 600 : 500, textAlign: "left",
+                    transition: "all 0.15s ease"
+                  }}>
+                    <Icon size={17} /> {n.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* User Profile and Logout */}
+            <div style={{ marginTop: "auto", padding: "14px 8px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: currentUser.role === "Admin" ? COLORS.purple : COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12.5, fontWeight: 700 }}>
+                  {currentUser.name.split(" ").map(w => w[0]).join("")}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: "#fff", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.name}</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>{currentUser.id} · {currentUser.role}</div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
+                  background: "transparent", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                }}
+              >
+                <Icons.LogOut size={13} /> Switch Account / Logout
+              </button>
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "16px 28px", borderBottom: `1px solid ${COLORS.line}`, background: COLORS.card
+            }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.ink, letterSpacing: -0.4 }}>{titleFor}</div>
+                <div style={{ fontSize: 12, color: COLORS.sub }}>Logged in as <b>{currentUser.name}</b> ({currentUser.id} · {currentUser.role})</div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", left: 10, top: 10, color: COLORS.sub }}>
+                    <Icons.Search size={15} />
+                  </div>
+                  <input
+                    placeholder="Search in database…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    style={{
+                      padding: "8px 12px 8px 32px", borderRadius: 8, border: `1px solid ${COLORS.line}`,
+                      fontSize: 13, width: 200, background: COLORS.paper, outline: "none"
+                    }}
+                  />
+                </div>
+                
+                <button onClick={loadData} title="Refresh from database" style={{
+                  background: COLORS.paper, border: `1px solid ${COLORS.line}`, borderRadius: 8,
+                  padding: "8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: COLORS.ink, fontWeight: 500
+                }}>
+                  <Icons.RefreshCw size={14} /> Refresh
+                </button>
+
+                {/* User status pill in header */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8, background: "#F1F5F9",
+                  padding: "5px 12px", borderRadius: 20, border: `1px solid ${COLORS.line}`
+                }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: currentUser.role === "Admin" ? COLORS.purple : COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
+                    {currentUser.name.split(" ").map(w => w[0]).join("")}
+                  </div>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: COLORS.ink }}>{currentUser.name}</span>
+                  <span style={{ fontSize: 11, color: COLORS.sub }}>({currentUser.id})</span>
+                </div>
+
+                {/* Prominent Header Log Out Button */}
+                <button
+                  onClick={handleLogout}
+                  title="Log out of application"
+                  className="btn-action"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    background: COLORS.redSoft, color: COLORS.red,
+                    border: `1px solid #FECACA`, borderRadius: 8,
+                    padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  <Icons.LogOut size={14} color={COLORS.red} /> Log Out
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: "24px 28px", flex: 1 }}>
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "60px 20px", color: COLORS.sub }}>
+                  <Icons.Database size={28} color={COLORS.accent} />
+                  <div style={{ marginTop: 10, fontWeight: 600 }}>Loading data from SQL database...</div>
+                </div>
+              ) : (
+                <>
+                  {tab === "dashboard" && <Dashboard tickets={tickets} stats={stats} activityLogs={activityLogs} />}
+                  {tab === "tracker" && <IssueTracker tickets={tickets} onAddTicket={handleAddTicket} onCycleStatus={handleCycleTicketStatus} onDeleteTicket={handleDeleteTicket} searchQuery={searchQuery} currentUser={currentUser} />}
+                  {tab === "employee" && <Employee employees={employees} activityLogs={activityLogs} onToggleStatus={handleToggleEmployeeStatus} searchQuery={searchQuery} currentUser={currentUser} />}
+                  {tab === "admin" && <Admin employees={employees} permissions={permissions} onAddEmployee={handleAddEmployee} onBulkImport={handleBulkImportEmployees} onDeleteEmployee={handleDeleteEmployee} onUpdatePermissions={handleUpdatePermissions} onResetPassword={handleResetPassword} />}
+                  {tab === "offer" && <OfferLetter offers={offers} onAddOffer={handleAddOffer} onAdvanceOffer={handleAdvanceOffer} onDeleteOffer={handleDeleteOffer} searchQuery={searchQuery} />}
+                </>
+              )}
+            </div>
+          </div>
+
+          <Toast toast={toast} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<SupportHub />);
+  </script>
+
+  <!-- Robust dependency loader + JSX compiler bootstrap -->
+  <script>
+    (function () {
+      var loader = document.getElementById("loading-screen");
+
+      function showBootError(title, detail) {
+        if (!loader) return;
+        loader.innerHTML =
+          '<div style="padding:40px;text-align:center;color:#fff;max-width:620px">' +
+          '<div style="font-size:32px;margin-bottom:16px">⚠️</div>' +
+          '<div style="font-size:18px;font-weight:700;margin-bottom:10px">' + title + '</div>' +
+          '<div style="font-size:13px;line-height:1.7;color:rgba(255,255,255,.7)">' + detail + '</div>' +
+          '<button onclick="location.reload()" style="margin-top:20px;border:0;border-radius:8px;background:#2F6FED;color:#fff;padding:10px 18px;font-weight:700;cursor:pointer">Reload</button>' +
+          '</div>';
+      }
+
+      function loadScript(name, urls) {
+        return new Promise(function (resolve, reject) {
+          var index = 0;
+          function attempt() {
+            if (index >= urls.length) {
+              reject(new Error(name + ' could not be loaded from the available CDNs.'));
+              return;
+            }
+            var src = urls[index++];
+            var script = document.createElement('script');
+            script.src = src;
+            script.async = false;
+            script.onload = function () { resolve(); };
+            script.onerror = function () {
+              script.remove();
+              attempt();
+            };
+            document.head.appendChild(script);
+          }
+          attempt();
+        });
+      }
+
+      async function boot() {
+        try {
+          await loadScript('React', [
+            'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
+            'https://unpkg.com/react@18.3.1/umd/react.production.min.js'
+          ]);
+
+          await loadScript('ReactDOM', [
+            'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js',
+            'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js'
+          ]);
+
+          await loadScript('Babel', [
+            'https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js',
+            'https://unpkg.com/@babel/standalone@7.23.10/babel.min.js'
+          ]);
+
+          // Recharts is not needed for the login screen, so failure here should not
+          // prevent the rest of SupportHub from starting.
+          try {
+            await loadScript('PropTypes', [
+              'https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js',
+              'https://unpkg.com/prop-types@15.8.1/prop-types.min.js'
+            ]);
+          } catch (e) {}
+
+          try {
+            await loadScript('Recharts', [
+              'https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js',
+              'https://unpkg.com/recharts@2.12.7/umd/Recharts.js'
+            ]);
+          } catch (e) {
+            window.Recharts = window.Recharts || {};
+          }
+
+          if (!window.React || !window.ReactDOM || !window.Babel) {
+            throw new Error('A required frontend dependency is missing.');
+          }
+
+          var sourceNode = document.getElementById('supporthub-app-source');
+          var source = sourceNode ? sourceNode.textContent : '';
+          if (!source.trim()) throw new Error('SupportHub application source was not found.');
+
+          var compiled = Babel.transform(source, { presets: ['env', 'react'] }).code;
+          var appScript = document.createElement('script');
+          appScript.text = compiled;
+          document.body.appendChild(appScript);
+          sourceNode.remove();
+        } catch (error) {
+          console.error('SupportHub boot error:', error);
+          showBootError(
+            'SupportHub could not start',
+            'A required frontend script could not be loaded. The page now shows the actual startup error instead of an endless spinner.<br><br><strong>' +
+            String(error && error.message ? error.message : error) + '</strong>'
+          );
+        }
+      }
+
+      boot();
+    })();
+  </script>
 </body>
 </html>
