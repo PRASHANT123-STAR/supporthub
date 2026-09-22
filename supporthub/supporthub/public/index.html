@@ -860,8 +860,133 @@
       );
     }
 
+    /* ---------------------------------- PAYROLL ---------------------------------- */
+    function Payroll({ payroll, employees, onCreatePayroll, onUpdatePayroll, onDeletePayroll, searchQuery }) {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const emptyForm = { id: null, employee_id: "", pay_month: currentMonth, basic_salary: "", hra: "", other_allowances: "", pf: "", esi: "", other_deductions: "", payment_status: "Pending" };
+      const [form, setForm] = useState(emptyForm);
+      const [showForm, setShowForm] = useState(false);
+      const [saving, setSaving] = useState(false);
+
+      const n = v => Number(v || 0);
+      const gross = n(form.basic_salary) + n(form.hra) + n(form.other_allowances);
+      const deductions = n(form.pf) + n(form.esi) + n(form.other_deductions);
+      const net = gross - deductions;
+
+      const filtered = payroll.filter(p => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return String(p.employee_id).toLowerCase().includes(q) || String(p.employee_name || "").toLowerCase().includes(q) || String(p.pay_month).includes(q) || String(p.id).toLowerCase().includes(q);
+      });
+
+      const startNew = () => {
+        setForm({ ...emptyForm });
+        setShowForm(true);
+      };
+
+      const editPayroll = p => {
+        setForm({
+          id: p.id, employee_id: p.employee_id, pay_month: p.pay_month,
+          basic_salary: p.basic_salary, hra: p.hra, other_allowances: p.other_allowances,
+          pf: p.pf, esi: p.esi, other_deductions: p.other_deductions, payment_status: p.payment_status
+        });
+        setShowForm(true);
+      };
+
+      const submit = async e => {
+        e.preventDefault();
+        if (!form.employee_id || !form.pay_month || n(form.basic_salary) < 0) return;
+        setSaving(true);
+        try {
+          if (form.id) {
+            await onUpdatePayroll(form.id, {
+              basic_salary: n(form.basic_salary), hra: n(form.hra), other_allowances: n(form.other_allowances),
+              pf: n(form.pf), esi: n(form.esi), other_deductions: n(form.other_deductions), payment_status: form.payment_status
+            });
+          } else {
+            await onCreatePayroll({
+              employee_id: form.employee_id, pay_month: form.pay_month,
+              basic_salary: n(form.basic_salary), hra: n(form.hra), other_allowances: n(form.other_allowances),
+              pf: n(form.pf), esi: n(form.esi), other_deductions: n(form.other_deductions), payment_status: form.payment_status
+            });
+          }
+          setForm({ ...emptyForm });
+          setShowForm(false);
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const printPayslip = p => {
+        const w = window.open("", "_blank", "width=800,height=900");
+        if (!w) return;
+        w.document.write(`<!doctype html><html><head><title>Payslip ${p.id}</title><style>body{font-family:Arial,sans-serif;padding:40px;color:#151B2C}h1{margin:0 0 6px}h2{margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:8px}.meta{color:#666;margin-bottom:22px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.total{font-weight:700;font-size:18px}.status{display:inline-block;padding:6px 10px;border-radius:6px;background:#eef2ff}</style></head><body><h1>SupportHub Payslip</h1><div class="meta">Payroll ID: ${p.id} · Pay Month: ${p.pay_month}</div><div><b>Employee:</b> ${p.employee_name} (${p.employee_id})</div><h2>Earnings</h2><div class="row"><span>Basic Salary</span><span>₹${Number(p.basic_salary).toFixed(2)}</span></div><div class="row"><span>HRA</span><span>₹${Number(p.hra).toFixed(2)}</span></div><div class="row"><span>Other Allowances</span><span>₹${Number(p.other_allowances).toFixed(2)}</span></div><div class="row total"><span>Gross Salary</span><span>₹${Number(p.gross_salary).toFixed(2)}</span></div><h2>Deductions</h2><div class="row"><span>PF</span><span>₹${Number(p.pf).toFixed(2)}</span></div><div class="row"><span>ESI</span><span>₹${Number(p.esi).toFixed(2)}</span></div><div class="row"><span>Other Deductions</span><span>₹${Number(p.other_deductions).toFixed(2)}</span></div><div class="row total"><span>Total Deductions</span><span>₹${Number(p.total_deductions).toFixed(2)}</span></div><h2>Net Pay</h2><div class="row total"><span>Net Salary</span><span>₹${Number(p.net_salary).toFixed(2)}</span></div><p class="status">Payment Status: ${p.payment_status}</p><script>window.onload=function(){window.print();}</script></body></html>`);
+        w.document.close();
+      };
+
+      return (
+        <div style={{ background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20, marginTop: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink }}>Employee Payroll</div>
+              <div style={{ color: COLORS.sub, fontSize: 12.5, marginTop: 3 }}>Monthly salary, deductions, net pay and payment status.</div>
+            </div>
+            <button className="btn-action" onClick={startNew} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}><Icons.Plus size={16} /> New Payroll</button>
+          </div>
+
+          {showForm && (
+            <form onSubmit={submit} style={{ background: COLORS.paper, border: `1px solid ${COLORS.line}`, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", gap: 10 }}>
+                <select required disabled={!!form.id} value={form.employee_id} onChange={e => setForm({ ...form, employee_id: e.target.value })} style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                  <option value="">Select Employee</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.id})</option>)}
+                </select>
+                <input required disabled={!!form.id} type="month" value={form.pay_month} onChange={e => setForm({ ...form, pay_month: e.target.value })} style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+                {[["basic_salary","Basic Salary"],["hra","HRA"],["other_allowances","Other Allowances"],["pf","PF"],["esi","ESI"],["other_deductions","Other Deductions"]].map(([key,label]) => (
+                  <input key={key} type="number" min="0" step="0.01" placeholder={label} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5 }} />
+                ))}
+                <select value={form.payment_status} onChange={e => setForm({ ...form, payment_status: e.target.value })} style={{ padding: "9px 12px", borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 13.5, background: "#fff" }}>
+                  <option>Pending</option><option>Processed</option><option>Paid</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 12, padding: "10px 12px", background: "#fff", borderRadius: 8, fontSize: 13 }}>
+                <span>Gross: <b>₹{gross.toFixed(2)}</b></span><span>Deductions: <b>₹{deductions.toFixed(2)}</b></span><span>Net: <b style={{ color: COLORS.green }}>₹{net.toFixed(2)}</b></span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+                <button type="button" onClick={() => { setShowForm(false); setForm({ ...emptyForm }); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${COLORS.line}`, background: "#fff", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={saving} className="btn-action" style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: COLORS.navy, color: "#fff", cursor: "pointer", fontWeight: 600 }}>{saving ? "Saving..." : form.id ? "Update Payroll" : "Save Payroll"}</button>
+              </div>
+            </form>
+          )}
+
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead><tr style={{ background: COLORS.paper, textAlign: "left" }}>
+                {["Payroll ID","Employee","Month","Gross","Deductions","Net Salary","Payment Status","Actions"].map(h => <th key={h} style={{ padding: "11px 12px", color: COLORS.sub, fontWeight: 600, fontSize: 12 }}>{h}</th>)}
+              </tr></thead>
+              <tbody>
+                {filtered.length === 0 ? <tr><td colSpan="8" style={{ padding: 28, textAlign: "center", color: COLORS.sub }}>No payroll records found.</td></tr> : filtered.map(p => {
+                  const ps = p.payment_status === "Paid" ? statusStyle("Resolved") : p.payment_status === "Processed" ? statusStyle("In Progress") : statusStyle("Open");
+                  return <tr key={p.id} style={{ borderTop: `1px solid ${COLORS.line}` }}>
+                    <td style={{ padding: "12px" }}>{p.id}</td><td style={{ padding: "12px" }}><b>{p.employee_name}</b><div style={{ color: COLORS.sub, fontSize: 11 }}>{p.employee_id}</div></td>
+                    <td style={{ padding: "12px" }}>{p.pay_month}</td><td style={{ padding: "12px" }}>₹{Number(p.gross_salary).toFixed(2)}</td><td style={{ padding: "12px" }}>₹{Number(p.total_deductions).toFixed(2)}</td><td style={{ padding: "12px", fontWeight: 700 }}>₹{Number(p.net_salary).toFixed(2)}</td>
+                    <td style={{ padding: "12px" }}><Pill bg={ps.bg} fg={ps.fg}>{p.payment_status}</Pill></td>
+                    <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
+                      <button onClick={() => editPayroll(p)} style={{ border: `1px solid ${COLORS.line}`, background: "#fff", borderRadius: 6, padding: "5px 8px", cursor: "pointer", marginRight: 5 }}>Edit</button>
+                      <button onClick={() => printPayslip(p)} style={{ border: `1px solid ${COLORS.line}`, background: "#fff", borderRadius: 6, padding: "5px 8px", cursor: "pointer", marginRight: 5 }}>Payslip</button>
+                      <button onClick={() => onDeletePayroll(p.id)} style={{ border: "none", background: "none", color: COLORS.red, cursor: "pointer", padding: 4 }}><Icons.X size={15} /></button>
+                    </td>
+                  </tr>;
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
     /* ---------------------------------- ADMIN PANEL & PERMISSIONS MATRIX ---------------------------------- */
-    function Admin({ employees, permissions, onAddEmployee, onBulkImport, onDeleteEmployee, onUpdatePermissions, onResetPassword }) {
+    function Admin({ employees, permissions, payroll, onAddEmployee, onBulkImport, onDeleteEmployee, onUpdatePermissions, onResetPassword, onCreatePayroll, onUpdatePayroll, onDeletePayroll, searchQuery }) {
       const [showForm, setShowForm] = useState(false);
       const [showImport, setShowImport] = useState(false);
       const [importFile, setImportFile] = useState(null);
@@ -1116,6 +1241,8 @@
             </table>
           </div>
 
+          <Payroll payroll={payroll} employees={employees} onCreatePayroll={onCreatePayroll} onUpdatePayroll={onUpdatePayroll} onDeletePayroll={onDeletePayroll} searchQuery={searchQuery} />
+
           {/* Reset Password Modal (Admin Only) */}
           {resetModal.open && (
             <div style={{
@@ -1282,6 +1409,7 @@
       const [tickets, setTickets] = useState([]);
       const [employees, setEmployees] = useState([]);
       const [offers, setOffers] = useState([]);
+      const [payroll, setPayroll] = useState([]);
       const [activityLogs, setActivityLogs] = useState([]);
       const [permissions, setPermissions] = useState([]);
       const [stats, setStats] = useState(null);
@@ -1310,10 +1438,11 @@
 
       const loadData = async () => {
         try {
-          const [tRes, eRes, oRes, lRes, sRes, pRes] = await Promise.all([
+          const [tRes, eRes, oRes, prRes, lRes, sRes, pRes] = await Promise.all([
             fetch("/api/tickets").then(r => r.json()),
             fetch("/api/employees").then(r => r.json()),
             fetch("/api/offers").then(r => r.json()),
+            fetch("/api/payroll").then(r => r.json()),
             fetch("/api/activity-logs").then(r => r.json()),
             fetch("/api/dashboard/stats").then(r => r.json()),
             fetch("/api/permissions").then(r => r.json()),
@@ -1321,6 +1450,7 @@
           setTickets(tRes || []);
           setEmployees(eRes || []);
           setOffers(oRes || []);
+          setPayroll(prRes || []);
           setActivityLogs(lRes || []);
           setStats(sRes || null);
           setPermissions(pRes || []);
@@ -1478,6 +1608,41 @@
         } catch (e) {
           showToast(e.message, "error");
         }
+      };
+
+      const handleCreatePayroll = async (payrollData) => {
+        try {
+          const res = await fetch("/api/payroll", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payrollData) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to create payroll");
+          setPayroll(prev => [data, ...prev]);
+          showToast(`Payroll ${data.id} created for ${data.employee_name}`);
+          await loadData();
+          return data;
+        } catch (e) { showToast(e.message, "error"); throw e; }
+      };
+
+      const handleUpdatePayroll = async (id, updates) => {
+        try {
+          const res = await fetch(`/api/payroll/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updates) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to update payroll");
+          setPayroll(prev => prev.map(p => p.id === id ? data : p));
+          showToast(`Payroll ${id} updated`);
+          await loadData();
+          return data;
+        } catch (e) { showToast(e.message, "error"); throw e; }
+      };
+
+      const handleDeletePayroll = async (id) => {
+        if (!window.confirm(`Delete payroll ${id}?`)) return;
+        try {
+          const res = await fetch(`/api/payroll/${id}`, { method: "DELETE" });
+          if (!res.ok) { const data = await res.json(); throw new Error(data.detail || "Failed to delete payroll"); }
+          setPayroll(prev => prev.filter(p => p.id !== id));
+          showToast(`Deleted payroll ${id}`);
+          loadData();
+        } catch (e) { showToast(e.message, "error"); }
       };
 
       const handleAddOffer = async (offerData) => {
@@ -1682,7 +1847,7 @@
                   {tab === "dashboard" && <Dashboard tickets={tickets} stats={stats} activityLogs={activityLogs} />}
                   {tab === "tracker" && <IssueTracker tickets={tickets} onAddTicket={handleAddTicket} onCycleStatus={handleCycleTicketStatus} onDeleteTicket={handleDeleteTicket} searchQuery={searchQuery} currentUser={currentUser} />}
                   {tab === "employee" && <Employee employees={employees} activityLogs={activityLogs} onToggleStatus={handleToggleEmployeeStatus} searchQuery={searchQuery} currentUser={currentUser} />}
-                  {tab === "admin" && <Admin employees={employees} permissions={permissions} onAddEmployee={handleAddEmployee} onBulkImport={handleBulkImportEmployees} onDeleteEmployee={handleDeleteEmployee} onUpdatePermissions={handleUpdatePermissions} onResetPassword={handleResetPassword} />}
+                  {tab === "admin" && <Admin employees={employees} permissions={permissions} payroll={payroll} onAddEmployee={handleAddEmployee} onBulkImport={handleBulkImportEmployees} onDeleteEmployee={handleDeleteEmployee} onUpdatePermissions={handleUpdatePermissions} onResetPassword={handleResetPassword} onCreatePayroll={handleCreatePayroll} onUpdatePayroll={handleUpdatePayroll} onDeletePayroll={handleDeletePayroll} searchQuery={searchQuery} />}
                   {tab === "offer" && <OfferLetter offers={offers} onAddOffer={handleAddOffer} onAdvanceOffer={handleAdvanceOffer} onDeleteOffer={handleDeleteOffer} searchQuery={searchQuery} />}
                 </>
               )}
