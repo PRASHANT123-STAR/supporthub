@@ -1883,6 +1883,7 @@
       function loadScript(name, urls) {
         return new Promise(function (resolve, reject) {
           var index = 0;
+          var timeoutMs = 7000;
           function attempt() {
             if (index >= urls.length) {
               reject(new Error(name + ' could not be loaded from the available CDNs.'));
@@ -1890,10 +1891,25 @@
             }
             var src = urls[index++];
             var script = document.createElement('script');
+            var finished = false;
+            var timer = setTimeout(function () {
+              if (finished) return;
+              finished = true;
+              script.remove();
+              attempt();
+            }, timeoutMs);
             script.src = src;
             script.async = false;
-            script.onload = function () { resolve(); };
+            script.onload = function () {
+              if (finished) return;
+              finished = true;
+              clearTimeout(timer);
+              resolve();
+            };
             script.onerror = function () {
+              if (finished) return;
+              finished = true;
+              clearTimeout(timer);
               script.remove();
               attempt();
             };
