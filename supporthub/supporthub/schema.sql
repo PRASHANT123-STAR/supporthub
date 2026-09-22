@@ -58,7 +58,27 @@ CREATE TABLE IF NOT EXISTS offers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Activity Logs Table
+-- 6. Payroll Table
+CREATE TABLE IF NOT EXISTS payroll (
+    id VARCHAR(50) PRIMARY KEY,
+    employee_id VARCHAR(50) NOT NULL,
+    pay_month VARCHAR(7) NOT NULL,
+    basic_salary REAL NOT NULL DEFAULT 0,
+    hra REAL NOT NULL DEFAULT 0,
+    other_allowances REAL NOT NULL DEFAULT 0,
+    gross_salary REAL NOT NULL DEFAULT 0,
+    pf REAL NOT NULL DEFAULT 0,
+    esi REAL NOT NULL DEFAULT 0,
+    other_deductions REAL NOT NULL DEFAULT 0,
+    total_deductions REAL NOT NULL DEFAULT 0,
+    net_salary REAL NOT NULL DEFAULT 0,
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (payment_status IN ('Pending', 'Processed', 'Paid')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(employee_id, pay_month)
+);
+
+-- 7. Activity Logs Table
 CREATE TABLE IF NOT EXISTS activity_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     emp VARCHAR(255) NOT NULL,
