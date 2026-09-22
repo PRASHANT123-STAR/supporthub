@@ -146,6 +146,50 @@ class TicketResponse(BaseModel):
 
 
 # -----------------------------
+# Payroll Models
+# -----------------------------
+class PayrollCreate(BaseModel):
+    employee_id: str = Field(..., min_length=1, max_length=50)
+    pay_month: str = Field(..., pattern=r"^\d{4}-\d{2}$")
+    basic_salary: float = Field(..., ge=0)
+    hra: float = Field(0, ge=0)
+    other_allowances: float = Field(0, ge=0)
+    pf: float = Field(0, ge=0)
+    esi: float = Field(0, ge=0)
+    other_deductions: float = Field(0, ge=0)
+    payment_status: Literal["Pending", "Processed", "Paid"] = "Pending"
+
+
+class PayrollUpdate(BaseModel):
+    basic_salary: Optional[float] = Field(None, ge=0)
+    hra: Optional[float] = Field(None, ge=0)
+    other_allowances: Optional[float] = Field(None, ge=0)
+    pf: Optional[float] = Field(None, ge=0)
+    esi: Optional[float] = Field(None, ge=0)
+    other_deductions: Optional[float] = Field(None, ge=0)
+    payment_status: Optional[Literal["Pending", "Processed", "Paid"]] = None
+
+
+class PayrollResponse(BaseModel):
+    id: str
+    employee_id: str
+    employee_name: str
+    pay_month: str
+    basic_salary: float
+    hra: float
+    other_allowances: float
+    gross_salary: float
+    pf: float
+    esi: float
+    other_deductions: float
+    total_deductions: float
+    net_salary: float
+    payment_status: str
+    created_at: str
+    updated_at: str
+
+
+# -----------------------------
 # Offer Letter Models
 # -----------------------------
 class OfferCreate(BaseModel):
