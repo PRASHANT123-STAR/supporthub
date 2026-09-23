@@ -243,5 +243,6 @@ class StatSummary(BaseModel):
     totalEmployees: int
     activeEmployees: int
     adminCount: int
-    weeklyTrend: list[dict]
-    priorityBreakdown: list[dict]
+    averageResolutionHours: float = 0
+    weeklyTrend: list[dict] = []
+    priorityBreakdown: list[dict] = []
