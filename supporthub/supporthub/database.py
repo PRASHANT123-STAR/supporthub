@@ -49,6 +49,16 @@ def init_db():
                 conn.execute("UPDATE employees SET phone = '+91 98765 00106' WHERE id = 'E-106'")
             conn.commit()
 
+        # Dashboard migration: keep a real resolution timestamp for ticket metrics.
+        ticket_cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tickets'")
+        if ticket_cursor.fetchone():
+            ticket_cols = [row["name"] for row in conn.execute("PRAGMA table_info(tickets)").fetchall()]
+            if "resolved_at" not in ticket_cols:
+                conn.execute("ALTER TABLE tickets ADD COLUMN resolved_at TIMESTAMP")
+                # Preserve existing resolved-ticket history using its last database update time.
+                conn.execute("UPDATE tickets SET resolved_at = updated_at WHERE status = 'Resolved' AND resolved_at IS NULL")
+                conn.commit()
+
     with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
         schema_sql = f.read()
 
@@ -572,19 +582,21 @@ def create_ticket(data: Dict[str, Any]) -> Dict[str, Any]:
             ticket_id = get_next_ticket_id(conn)
 
         created_label = data.get("created") or "Today"
+        ticket_status = data.get("status") or "Open"
         conn.execute(
             """
-            INSERT INTO tickets (id, title, requester, priority, status, assignee, created)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO tickets (id, title, requester, priority, status, assignee, created, resolved_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CASE WHEN ? = 'Resolved' THEN CURRENT_TIMESTAMP ELSE NULL END)
             """,
             (
                 ticket_id,
                 data["title"],
                 data["requester"],
                 data.get("priority") or "Medium",
-                data.get("status") or "Open",
+                ticket_status,
                 data.get("assignee") or "Unassigned",
                 created_label,
+                ticket_status,
             ),
         )
         conn.commit()
@@ -593,12 +605,20 @@ def create_ticket(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def update_ticket(ticket_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     allowed = ["title", "requester", "priority", "status", "assignee"]
-    fields = [f"{k} = ?" for k in updates if k in allowed and updates[k] is not None]
-    if not fields:
+    clean_updates = {k: updates[k] for k in allowed if k in updates and updates[k] is not None}
+    if not clean_updates:
         return get_ticket_by_id(ticket_id)
 
+    fields = [f"{k} = ?" for k in clean_updates]
+    values = list(clean_updates.values())
+
+    if "status" in clean_updates:
+        if clean_updates["status"] == "Resolved":
+            fields.append("resolved_at = COALESCE(resolved_at, CURRENT_TIMESTAMP)")
+        else:
+            fields.append("resolved_at = NULL")
+
     fields.append("updated_at = CURRENT_TIMESTAMP")
-    values = [updates[k] for k in updates if k in allowed and updates[k] is not None]
     values.append(ticket_id)
 
     with get_db_connection() as conn:
@@ -714,30 +734,70 @@ def create_activity_log(data: Dict[str, Any]) -> Dict[str, Any]:
 # DASHBOARD AGGREGATE REPOSITORY
 # -------------------------------------------------------------
 def get_dashboard_stats() -> Dict[str, Any]:
+    """Return dashboard metrics calculated from the live SQLite records.
+
+    Counts are always read from the current database. Weekly trend and average
+    resolution time are derived from ticket timestamps rather than hard-coded
+    demo values.
+    """
     with get_db_connection() as conn:
-        total_tickets = conn.execute("SELECT count(*) as c FROM tickets").fetchone()["c"]
-        open_tickets = conn.execute("SELECT count(*) as c FROM tickets WHERE status = 'Open'").fetchone()["c"]
-        in_progress = conn.execute("SELECT count(*) as c FROM tickets WHERE status = 'In Progress'").fetchone()["c"]
-        resolved_tickets = conn.execute("SELECT count(*) as c FROM tickets WHERE status = 'Resolved'").fetchone()["c"]
+        total_tickets = conn.execute("SELECT COUNT(*) AS c FROM tickets").fetchone()["c"]
+        open_tickets = conn.execute("SELECT COUNT(*) AS c FROM tickets WHERE status = 'Open'").fetchone()["c"]
+        in_progress = conn.execute("SELECT COUNT(*) AS c FROM tickets WHERE status = 'In Progress'").fetchone()["c"]
+        resolved_tickets = conn.execute("SELECT COUNT(*) AS c FROM tickets WHERE status = 'Resolved'").fetchone()["c"]
 
-        total_employees = conn.execute("SELECT count(*) as c FROM employees").fetchone()["c"]
-        active_employees = conn.execute("SELECT count(*) as c FROM employees WHERE status = 'online'").fetchone()["c"]
-        admin_count = conn.execute("SELECT count(*) as c FROM employees WHERE role = 'Admin'").fetchone()["c"]
+        total_employees = conn.execute("SELECT COUNT(*) AS c FROM employees").fetchone()["c"]
+        active_employees = conn.execute("SELECT COUNT(*) AS c FROM employees WHERE status = 'online'").fetchone()["c"]
+        admin_count = conn.execute("SELECT COUNT(*) AS c FROM employees WHERE role = 'Admin'").fetchone()["c"]
 
-        crit = conn.execute("SELECT count(*) as c FROM tickets WHERE priority = 'Critical'").fetchone()["c"]
-        high = conn.execute("SELECT count(*) as c FROM tickets WHERE priority = 'High'").fetchone()["c"]
-        med = conn.execute("SELECT count(*) as c FROM tickets WHERE priority = 'Medium'").fetchone()["c"]
-        low = conn.execute("SELECT count(*) as c FROM tickets WHERE priority = 'Low'").fetchone()["c"]
+        priority_rows = conn.execute(
+            "SELECT priority, COUNT(*) AS c FROM tickets GROUP BY priority"
+        ).fetchall()
+        priority_counts = {row["priority"]: row["c"] for row in priority_rows}
 
-        weekly_trend = [
-            {"day": "Mon", "received": 14, "resolved": 11},
-            {"day": "Tue", "received": 18, "resolved": 15},
-            {"day": "Wed", "received": 9, "resolved": 12},
-            {"day": "Thu", "received": 21, "resolved": 16},
-            {"day": "Fri", "received": 16, "resolved": 14},
-            {"day": "Sat", "received": 6, "resolved": 8},
-            {"day": "Sun", "received": max(4, total_tickets - 20), "resolved": max(5, resolved_tickets)},
-        ]
+        # Last 7 calendar days, including today.
+        trend_rows = conn.execute("""
+            SELECT
+                date(created_at) AS day,
+                COUNT(*) AS received
+            FROM tickets
+            WHERE date(created_at) >= date('now', '-6 day')
+            GROUP BY date(created_at)
+        """).fetchall()
+        resolved_rows = conn.execute("""
+            SELECT
+                date(resolved_at) AS day,
+                COUNT(*) AS resolved
+            FROM tickets
+            WHERE resolved_at IS NOT NULL
+              AND date(resolved_at) >= date('now', '-6 day')
+            GROUP BY date(resolved_at)
+        """).fetchall()
+
+        received_by_day = {row["day"]: row["received"] for row in trend_rows}
+        resolved_by_day = {row["day"]: row["resolved"] for row in resolved_rows}
+        date_rows = conn.execute(
+            "SELECT date('now', '-' || n || ' day') AS day, n FROM (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6) ORDER BY n DESC"
+        ).fetchall()
+
+        weekly_trend = []
+        for row in date_rows:
+            day_value = row["day"]
+            weekly_trend.append({
+                "day": day_value,
+                "label": day_value[5:],
+                "received": received_by_day.get(day_value, 0),
+                "resolved": resolved_by_day.get(day_value, 0),
+            })
+
+        avg_row = conn.execute("""
+            SELECT AVG((julianday(resolved_at) - julianday(created_at)) * 24.0) AS hours
+            FROM tickets
+            WHERE status = 'Resolved'
+              AND resolved_at IS NOT NULL
+              AND created_at IS NOT NULL
+        """).fetchone()
+        avg_hours = round(float(avg_row["hours"] or 0), 1)
 
         return {
             "totalTickets": total_tickets,
@@ -748,12 +808,13 @@ def get_dashboard_stats() -> Dict[str, Any]:
             "totalEmployees": total_employees,
             "activeEmployees": active_employees,
             "adminCount": admin_count,
+            "averageResolutionHours": avg_hours,
             "weeklyTrend": weekly_trend,
             "priorityBreakdown": [
-                {"name": "Critical", "count": crit},
-                {"name": "High", "count": high},
-                {"name": "Medium", "count": med},
-                {"name": "Low", "count": low},
+                {"name": "Critical", "count": priority_counts.get("Critical", 0)},
+                {"name": "High", "count": priority_counts.get("High", 0)},
+                {"name": "Medium", "count": priority_counts.get("Medium", 0)},
+                {"name": "Low", "count": priority_counts.get("Low", 0)},
             ],
         }
 
