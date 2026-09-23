@@ -558,33 +558,30 @@
 
     /* ---------------------------------- DASHBOARD ---------------------------------- */
     function Dashboard({ tickets, stats, activityLogs }) {
-      const resolved = tickets.filter(t => t.status === "Resolved").length;
-      const open = tickets.filter(t => t.status === "Open").length;
-      const inProgress = tickets.filter(t => t.status === "In Progress").length;
+      // Dashboard values come from the live SQL aggregate endpoint.
+      // The tickets array remains a safe fallback for the status split if needed.
+      const resolved = Number.isFinite(stats?.resolvedTickets) ? stats.resolvedTickets : tickets.filter(t => t.status === "Resolved").length;
+      const open = Number.isFinite(stats?.openTickets) ? stats.openTickets : tickets.filter(t => t.status === "Open").length;
+      const inProgress = Number.isFinite(stats?.inProgressTickets) ? stats.inProgressTickets : tickets.filter(t => t.status === "In Progress").length;
+      const total = Number.isFinite(stats?.totalTickets) ? stats.totalTickets : tickets.length;
+      const activeIssues = Number.isFinite(stats?.activeIssues) ? stats.activeIssues : open + inProgress;
+      const avgHours = Number.isFinite(stats?.averageResolutionHours) ? stats.averageResolutionHours : 0;
 
       const pieData = [
-        { name: "Resolved", value: resolved || 1, color: COLORS.green },
-        { name: "In Progress", value: inProgress || 1, color: COLORS.amber },
-        { name: "Open", value: open || 1, color: COLORS.red },
+        { name: "Resolved", value: resolved, color: COLORS.green },
+        { name: "In Progress", value: inProgress, color: COLORS.amber },
+        { name: "Open", value: open, color: COLORS.red },
       ];
 
-      const weeklyTrend = stats?.weeklyTrend || [
-        { day: "Mon", received: 14, resolved: 11 },
-        { day: "Tue", received: 18, resolved: 15 },
-        { day: "Wed", received: 9, resolved: 12 },
-        { day: "Thu", received: 21, resolved: 16 },
-        { day: "Fri", received: 16, resolved: 14 },
-        { day: "Sat", received: 6, resolved: 8 },
-        { day: "Sun", received: 4, resolved: 5 },
-      ];
+      const weeklyTrend = Array.isArray(stats?.weeklyTrend) ? stats.weeklyTrend : [];
 
       return (
         <div className="fade-in">
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
-            <StatCard label="Tickets received (Total)" value={tickets.length} delta="+12% vs last week" icon={Icons.Ticket} tone={COLORS.accent} />
-            <StatCard label="Resolved" value={resolved} delta={`${tickets.length > 0 ? Math.round((resolved / tickets.length) * 100) : 100}% resolution rate`} icon={Icons.CheckCircle2} tone={COLORS.green} />
-            <StatCard label="Currently open" value={open + inProgress} icon={Icons.AlertCircle} tone={COLORS.amber} />
-            <StatCard label="Avg. resolution time" value="6.4h" delta="-1.1h vs last week" icon={Icons.Clock} tone={COLORS.navy} />
+            <StatCard label="Tickets received (Total)" value={total} delta="Live from SQL" icon={Icons.Ticket} tone={COLORS.accent} />
+            <StatCard label="Resolved" value={resolved} delta={`${total > 0 ? Math.round((resolved / total) * 100) : 0}% resolution rate`} icon={Icons.CheckCircle2} tone={COLORS.green} />
+            <StatCard label="Currently open" value={activeIssues} delta={`${open} open · ${inProgress} in progress`} icon={Icons.AlertCircle} tone={COLORS.amber} />
+            <StatCard label="Avg. resolution time" value={`${avgHours.toFixed(1)}h`} delta="Calculated from resolved tickets" icon={Icons.Clock} tone={COLORS.navy} />
           </div>
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -606,7 +603,7 @@
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={COLORS.line} vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 12, fill: COLORS.sub }} axisLine={false} tickLine={false} width={26} />
                   <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${COLORS.line}`, fontSize: 12.5 }} />
                   <Area type="monotone" dataKey="received" stroke={COLORS.accent} fill="url(#recv)" strokeWidth={2} name="Received" />
@@ -661,7 +658,7 @@
             <div style={{ flex: 1, minWidth: 260, background: COLORS.card, border: `1px solid ${COLORS.line}`, borderRadius: 12, padding: 20 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginBottom: 12 }}>Tickets by priority</div>
               <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={[
+                <BarChart data={Array.isArray(stats?.priorityBreakdown) ? stats.priorityBreakdown : [
                   { name: "Critical", count: tickets.filter(t => t.priority === "Critical").length },
                   { name: "High", count: tickets.filter(t => t.priority === "High").length },
                   { name: "Medium", count: tickets.filter(t => t.priority === "Medium").length },
